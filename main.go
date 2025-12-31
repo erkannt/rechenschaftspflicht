@@ -22,6 +22,7 @@ import (
 
 var (
 	allowedEmails = []string{
+		"foo@example.com",
 		"alice@example.com",
 		"bob@example.com",
 	}
@@ -100,20 +101,7 @@ func sendMagicLink(toEmail, token string) error {
 
 // GET "/" – simple landing page with a form
 func rootHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	w.Header().Set("Content-Type", "text/html")
-	fmt.Fprint(w, `
-		<!DOCTYPE html>
-		<html>
-		<head><title>Login</title></head>
-		<body>
-			<h1>Login</h1>
-			<form action="/login" method="POST">
-				<label>Email: <input type="email" name="email" required></label><br>
-				<button type="submit">Send Magic Link</button>
-			</form>
-		</body>
-		</html>
-	`)
+	login().Render(r.Context(), w)
 }
 
 // POST "/login" – receive email, validate, send magic link
