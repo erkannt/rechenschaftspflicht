@@ -18,14 +18,14 @@ var tmpl = template.Must(template.New("hello").Parse(`
 <body><h1>Hello, World!</h1></body>
 </html>`))
 
-func helloHandler(w http.ResponseWriter, r *http.Request) {
+func loginHandler(w http.ResponseWriter, r *http.Request) {
 	if err := tmpl.Execute(w, nil); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
 func main() {
-	http.HandleFunc("/", helloHandler)
+	http.HandleFunc("/", loginHandler)
 
 	srv := &http.Server{Addr: ":8080"}
 
