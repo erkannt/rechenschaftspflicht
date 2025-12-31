@@ -2,32 +2,25 @@ package main
 
 import (
 	"context"
-	"html/template"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/julienschmidt/httprouter"
 )
 
-var tmpl = template.Must(template.New("hello").Parse(`
-<!DOCTYPE html>
-<html>
-<head><title>Hello</title></head>
-<body><h1>Hello, World!</h1></body>
-</html>`))
-
-func loginHandler(w http.ResponseWriter, r *http.Request) {
-	if err := tmpl.Execute(w, nil); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+func loginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	login().Render(r.Context(), w)
 }
 
 func main() {
-	http.HandleFunc("/", loginHandler)
+	router := httprouter.New()
+	router.GET("/", loginHandler)
 
-	srv := &http.Server{Addr: ":8080"}
+	srv := &http.Server{Addr: ":8080", Handler: router}
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
