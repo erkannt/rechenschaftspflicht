@@ -1,0 +1,1 @@
+server: go tool air
