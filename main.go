@@ -99,36 +99,45 @@ func sendMagicLink(toEmail, token string) error {
 // Handlers
 // ---------------------------------------------------------------------
 
-// GET "/" – simple landing page with a form
 func rootHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	login().Render(r.Context(), w)
+}
+
+func checkYourEmailHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	checkYourEmail().Render(r.Context(), w)
 }
 
 // POST "/login" – receive email, validate, send magic link
 func loginPostHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if err := r.ParseForm(); err != nil {
-		http.Error(w, "invalid form", http.StatusBadRequest)
+		log.Printf("error parsing form: %v", err)
+		http.Redirect(w, r, "/check-your-email", http.StatusFound)
 		return
 	}
 	email := r.FormValue("email")
 	if email == "" {
-		http.Error(w, "email required", http.StatusBadRequest)
+		log.Println("email required")
+		http.Redirect(w, r, "/check-your-email", http.StatusFound)
 		return
 	}
 	if !isAllowedEmail(email) {
-		http.Error(w, "email not authorized", http.StatusForbidden)
+		log.Printf("unauthorized email attempt: %s", email)
+		http.Redirect(w, r, "/check-your-email", http.StatusFound)
 		return
 	}
 	token, err := generateToken(email)
 	if err != nil {
-		http.Error(w, "could not generate token", http.StatusInternalServerError)
+		log.Printf("could not generate token for %s: %v", email, err)
+		http.Redirect(w, r, "/check-your-email", http.StatusFound)
 		return
 	}
 	if err := sendMagicLink(email, token); err != nil {
-		http.Error(w, "could not send email", http.StatusInternalServerError)
+		log.Printf("could not send email to %s: %v", email, err)
+		http.Redirect(w, r, "/check-your-email", http.StatusFound)
 		return
 	}
-	fmt.Fprint(w, "Magic login link sent (check your email).")
+	log.Printf("magic login link sent to %s", email)
+	http.Redirect(w, r, "/check-your-email", http.StatusFound)
 }
 
 // GET "/login" – validate token and redirect
@@ -182,6 +191,7 @@ func main() {
 	router.GET("/", rootHandler)
 	router.POST("/login", loginPostHandler)
 	router.GET("/login", loginGetHandler)
+	router.GET("/check-your-email", checkYourEmailHandler)
 	router.GET("/dashboard", dashboardHandler)
 
 	srv := &http.Server{Addr: ":8080", Handler: router}
