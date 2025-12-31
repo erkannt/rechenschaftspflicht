@@ -29,7 +29,7 @@ func login() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html><head><title>Hello</title></head><body><h1>Hello, World!</h1></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html><head><meta charset=\"UTF-8\"><title>Rechenschaftspflicht</title><link rel=\"stylesheet\" href=\"https://unpkg.com/@picocss/pico@1/css/pico.min.css\"></head><body><main class=\"container\"><h1>Login</h1><form action=\"/login\" method=\"POST\"><label for=\"email\">Email:</label> <input type=\"email\" id=\"email\" name=\"email\" placeholder=\"you@example.com\" required> <button type=\"submit\">Send Login Link</button></form><p>Enter your email address. We'll send you a magic login link.</p></main></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
