@@ -10,6 +10,17 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+func IsLoggedIn(r *http.Request) bool {
+	cookie, err := r.Cookie("auth")
+	if err != nil || cookie.Value == "" {
+		return false
+	}
+	if email, err := services.ValidateToken(cookie.Value); err != nil || email == "" {
+		return false
+	}
+	return true
+}
+
 func LandingHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// If the user already has a valid auth cookie, redirect them to /record-event
 	if cookie, err := r.Cookie("auth"); err == nil {

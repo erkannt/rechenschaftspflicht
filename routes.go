@@ -10,19 +10,13 @@ import (
 
 func mustBeLoggedIn(h httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		cookie, err := r.Cookie("auth")
-		if err != nil || cookie.Value == "" {
-			http.Redirect(w, r, "/login", http.StatusFound)
-			return
-		}
-		if email, err := services.ValidateToken(cookie.Value); err != nil || email == "" {
+		if !handlers.IsLoggedIn(r) {
 			http.Redirect(w, r, "/login", http.StatusFound)
 			return
 		}
 		h(w, r, ps)
 	}
 }
-
 func addRoutes(router *httprouter.Router,
 	eventStore *services.EventStore) {
 	router.GET("/", handlers.LandingHandler)
