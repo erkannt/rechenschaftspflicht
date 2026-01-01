@@ -11,7 +11,7 @@ import (
 )
 
 func LandingHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	views.Layout(views.Login()).Render(r.Context(), w)
+	views.LayoutBare(views.Login()).Render(r.Context(), w)
 }
 
 func LoginPostHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -74,5 +74,5 @@ func LoginGetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 }
 
 func CheckYourEmailHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	views.Layout(views.CheckYourEmail()).Render(r.Context(), w)
+	views.LayoutBare(views.CheckYourEmail()).Render(r.Context(), w)
 }

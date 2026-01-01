@@ -20,7 +20,7 @@ func RecordEventFormHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	views.Layout(views.NewEventForm()).Render(r.Context(), w)
+	views.LayoutWithNav(views.NewEventForm()).Render(r.Context(), w)
 }
 
 func RecordEventPostHandler(eventStore *services.EventStore) httprouter.Handle {
@@ -51,7 +51,7 @@ func RecordEventPostHandler(eventStore *services.EventStore) httprouter.Handle {
 
 		fmt.Printf("Received: %+v\n", event)
 
-		views.Layout(
+		views.LayoutWithNav(
 			views.NewEventFormWithSuccessBanner(),
 		).Render(r.Context(), w)
 	}
@@ -66,7 +66,7 @@ func AllEventsHandler(eventStore *services.EventStore) httprouter.Handle {
 			return
 		}
 
-		views.Layout(
+		views.LayoutWithNav(
 			views.AllEvents(events),
 		).Render(r.Context(), w)
 	}

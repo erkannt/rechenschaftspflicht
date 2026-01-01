@@ -3,6 +3,7 @@ package views
 import "github.com/erkannt/rechenschaftspflicht/services"
 
 templ AllEvents(events []services.Event) {
+	<h1>All Events</h1>>
 	<ul>
 		for _, e := range events {
 			<li>
