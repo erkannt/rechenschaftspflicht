@@ -11,6 +11,16 @@ import (
 )
 
 func LandingHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	// If the user already has a valid auth cookie, redirect them to /record-event
+	if cookie, err := r.Cookie("auth"); err == nil {
+		if token := cookie.Value; token != "" {
+			if email, err := services.ValidateToken(token); err == nil && email != "" {
+				log.Printf("User %s already logged in, redirecting to /record-event", email)
+				http.Redirect(w, r, "/record-event", http.StatusFound)
+				return
+			}
+		}
+	}
 	views.LayoutBare(views.Login()).Render(r.Context(), w)
 }
 
