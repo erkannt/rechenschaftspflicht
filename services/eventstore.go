@@ -24,20 +24,18 @@ type SQLiteEventStore struct {
 	db *sql.DB
 }
 
-func NewEventStore() EventStore {
-	// Ensure the data directory exists
+func InitDB() (*sql.DB, error) {
 	if err := os.MkdirAll("data", os.ModePerm); err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	dbPath := filepath.Join("data", "state.db")
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	// Create the events table if it does not exist
-	createTable := `
+	createEventsTable := `
 	CREATE TABLE IF NOT EXISTS events (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		tag TEXT,
@@ -46,10 +44,14 @@ func NewEventStore() EventStore {
 		createdAt TEXT
 	);
 	`
-	if _, err = db.Exec(createTable); err != nil {
-		panic(err)
+	if _, err = db.Exec(createEventsTable); err != nil {
+		return nil, err
 	}
 
+	return db, nil
+}
+
+func NewEventStore(db *sql.DB) EventStore {
 	return &SQLiteEventStore{db: db}
 }
 

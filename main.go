@@ -14,8 +14,13 @@ import (
 )
 
 func main() {
+	database, err := services.InitDB()
+	if err != nil {
+		log.Fatalf("Could not init database: %v", err)
+	}
+	eventStore := services.NewEventStore(database)
+
 	router := httprouter.New()
-	eventStore := services.NewEventStore()
 	addRoutes(router, &eventStore)
 
 	srv := &http.Server{Addr: ":8080", Handler: router}
