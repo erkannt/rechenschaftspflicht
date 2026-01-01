@@ -9,12 +9,14 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/erkannt/rechenschaftspflicht/services"
 	"github.com/julienschmidt/httprouter"
 )
 
 func main() {
 	router := httprouter.New()
-	addRoutes(router)
+	eventStore := services.NewEventStore()
+	addRoutes(router, &eventStore)
 
 	srv := &http.Server{Addr: ":8080", Handler: router}
 

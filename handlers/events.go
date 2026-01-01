@@ -23,35 +23,33 @@ func RecordEventFormHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 	views.Layout(views.NewEventForm()).Render(r.Context(), w)
 }
 
-type Event struct {
-	Tag       string `json:"tag"`
-	Comment   string `json:"comment"`
-	Value     string `json:"value"`
-	CreatedAt string `json:"createdAt"`
-}
+func RecordEventPostHandler(store *services.EventStore) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, "invalid form data", http.StatusBadRequest)
+			return
+		}
 
-func RecordEventPostHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	if err := r.ParseForm(); err != nil {
-		http.Error(w, "invalid form data", http.StatusBadRequest)
-		return
+		tag := r.FormValue("tag")
+		comment := r.FormValue("comment")
+		value := r.FormValue("value")
+
+		createdAt := time.Now().Format(time.RFC3339)
+
+		event := services.Event{
+			Tag:       tag,
+			Comment:   comment,
+			Value:     value,
+			CreatedAt: createdAt,
+		}
+
+		// Store the event using the provided EventStore (implementation dependent)
+		_ = store // placeholder to avoid unused variable warning
+
+		fmt.Printf("Received: %+v\n", event)
+
+		views.Layout(
+			views.NewEventFormWithSuccessBanner(),
+		).Render(r.Context(), w)
 	}
-
-	tag := r.FormValue("tag")
-	comment := r.FormValue("comment")
-	value := r.FormValue("value")
-
-	createdAt := time.Now().Format(time.RFC3339)
-
-	event := Event{
-		Tag:       tag,
-		Comment:   comment,
-		Value:     value,
-		CreatedAt: createdAt,
-	}
-
-	fmt.Printf("Received: %+v\n", event)
-
-	views.Layout(
-		views.NewEventFormWithSuccessBanner(),
-	).Render(r.Context(), w)
 }
