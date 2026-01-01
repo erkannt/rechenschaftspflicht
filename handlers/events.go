@@ -9,7 +9,7 @@ import (
 )
 
 // GET "/dashboard" – protected resource
-func DashboardHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func LogEventFormHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	cookie, err := r.Cookie("auth")
 	if err != nil || cookie.Value == "" {
 		w.WriteHeader(http.StatusUnauthorized)
