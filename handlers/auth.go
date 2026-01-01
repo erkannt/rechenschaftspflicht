@@ -22,15 +22,12 @@ func IsLoggedIn(r *http.Request) bool {
 }
 
 func LandingHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	// If the user already has a valid auth cookie, redirect them to /record-event
-	if cookie, err := r.Cookie("auth"); err == nil {
-		if token := cookie.Value; token != "" {
-			if email, err := services.ValidateToken(token); err == nil && email != "" {
-				log.Printf("User %s already logged in, redirecting to /record-event", email)
-				http.Redirect(w, r, "/record-event", http.StatusFound)
-				return
-			}
-		}
+	if IsLoggedIn(r) {
+		cookie, _ := r.Cookie("auth")
+		email, _ := services.ValidateToken(cookie.Value)
+		log.Printf("User %s already logged in, redirecting to /record-event", email)
+		http.Redirect(w, r, "/record-event", http.StatusFound)
+		return
 	}
 	views.LayoutBare(views.Login()).Render(r.Context(), w)
 }
