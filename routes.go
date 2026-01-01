@@ -10,5 +10,5 @@ func addRoutes(router *httprouter.Router) {
 	router.POST("/login", handlers.LoginPostHandler)
 	router.GET("/login", handlers.LoginGetHandler)
 	router.GET("/check-your-email", handlers.CheckYourEmailHandler)
-	router.GET("/log-event", handlers.LogEventFormHandler)
+	router.GET("/record-event", handlers.RecordEventFormHandler)
 }
