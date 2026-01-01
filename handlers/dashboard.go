@@ -12,11 +12,11 @@ import (
 func DashboardHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	cookie, err := r.Cookie("auth")
 	if err != nil || cookie.Value == "" {
-		w.WriteHeader(http.StatusTooManyRequests) // 429
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 	if email, err := services.ValidateToken(cookie.Value); err != nil || email == "" {
-		w.WriteHeader(http.StatusTooManyRequests) // 429
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 	fmt.Fprint(w, "success")
