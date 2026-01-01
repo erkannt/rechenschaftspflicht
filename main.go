@@ -76,21 +76,28 @@ func validateToken(tokenStr string) (string, error) {
 
 // send a magic login link via SMTP
 func sendMagicLink(toEmail, token string) error {
-	smtpHost := getEnv("SMTP_HOST", "")
-	smtpPort := getEnv("SMTP_PORT", "587")
+	smtpHost := getEnv("SMTP_HOST", "localhost")
+	smtpPort := getEnv("SMTP_PORT", "1025")
 	smtpUser := getEnv("SMTP_USER", "")
 	smtpPass := getEnv("SMTP_PASS", "")
-	smtpFrom := getEnv("SMTP_FROM", "")
+	smtpFrom := getEnv("SMTP_FROM", "no-reply@example.com")
 
 	if smtpHost == "" || smtpFrom == "" {
 		return fmt.Errorf("SMTP configuration incomplete")
 	}
 
 	link := fmt.Sprintf("http://localhost:8080/login?token=%s", token)
-	msg := fmt.Sprintf("Subject: Your Magic Login Link\r\n\r\nClick the following link to log in:\n\n%s", link)
+	// Include a minimal set of headers; MailCatcher does not require authentication.
+	msg := fmt.Sprintf("From: %s\r\nSubject: Your Magic Login Link\r\n\r\nClick the following link to log in:\n\n%s",
+		smtpFrom, link)
 
 	addr := fmt.Sprintf("%s:%s", smtpHost, smtpPort)
-	auth := smtp.PlainAuth("", smtpUser, smtpPass, smtpHost)
+
+	// MailCatcher does not support AUTH, so only use authentication when credentials are provided.
+	var auth smtp.Auth
+	if smtpUser != "" {
+		auth = smtp.PlainAuth("", smtpUser, smtpPass, smtpHost)
+	}
 
 	return smtp.SendMail(addr, auth, smtpFrom, []string{toEmail}, []byte(msg))
 }
