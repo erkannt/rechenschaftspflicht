@@ -1,0 +1,23 @@
+package views
+
+templ LogNewEvent() {
+	<h1>Log New Event</h1>
+	<form method="post" action="/events">
+		<label for="tag">Tag:</label>
+		<input type="text" id="tag" name="tag" required pattern="^[a-z][a-z-]*$"/>
+		<small>Used to group events. Can only contain a-z and hyphens.</small>
+		<label for="value">Value (optional):</label>
+		<input type="number" id="value" name="value"/>
+		<small>Events with values can later be plotted.</small>
+		<label for="comment">Comment (optional):</label>
+		<textarea id="comment" name="comment"></textarea>
+		<button type="submit">Log Event</button>
+	</form>
+	<style>
+		input:invalid
+		{
+			border: 2px solid #e74c3c;
+			background-color: #fdecea;
+		}
+	</style>
+}

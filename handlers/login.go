@@ -70,7 +70,7 @@ func LoginGetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 
 	// Optionally log the successful login
 	log.Printf("User %s logged in via magic link", email)
-	http.Redirect(w, r, "/dashboard", http.StatusFound)
+	http.Redirect(w, r, "/log-event", http.StatusFound)
 }
 
 func CheckYourEmailHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {

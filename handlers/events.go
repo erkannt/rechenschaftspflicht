@@ -1,14 +1,13 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/erkannt/rechenschaftspflicht/services"
+	"github.com/erkannt/rechenschaftspflicht/views"
 	"github.com/julienschmidt/httprouter"
 )
 
-// GET "/dashboard" – protected resource
 func LogEventFormHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	cookie, err := r.Cookie("auth")
 	if err != nil || cookie.Value == "" {
@@ -19,5 +18,5 @@ func LogEventFormHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	fmt.Fprint(w, "success")
+	views.Layout(views.LogNewEvent()).Render(r.Context(), w)
 }
