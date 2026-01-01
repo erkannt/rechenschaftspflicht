@@ -2,7 +2,7 @@ package views
 
 templ NewEventForm() {
 	<h1>Log New Event</h1>
-	<form method="post" action="/events">
+	<form method="post">
 		<label for="tag">Tag:</label>
 		<input type="text" id="tag" name="tag" required pattern="^[a-z][a-z-]*$"/>
 		<small>Used to group events. Can only contain a-z and hyphens.</small>
