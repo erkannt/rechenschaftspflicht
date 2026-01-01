@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/erkannt/rechenschaftspflicht/views"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/julienschmidt/httprouter"
 )
@@ -107,11 +108,11 @@ func sendMagicLink(toEmail, token string) error {
 // ---------------------------------------------------------------------
 
 func rootHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	login().Render(r.Context(), w)
+	views.Login().Render(r.Context(), w)
 }
 
 func checkYourEmailHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	checkYourEmail().Render(r.Context(), w)
+	views.CheckYourEmail().Render(r.Context(), w)
 }
 
 // POST "/login" – receive email, validate, send magic link
