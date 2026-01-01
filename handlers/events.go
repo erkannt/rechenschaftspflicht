@@ -51,5 +51,7 @@ func RecordEventPostHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 
 	fmt.Printf("Received: %+v\n", event)
 
-	w.WriteHeader(http.StatusOK)
+	views.Layout(
+		views.NewEventFormWithSuccessBanner(),
+	).Render(r.Context(), w)
 }
