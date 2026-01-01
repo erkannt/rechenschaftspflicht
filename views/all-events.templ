@@ -1,0 +1,13 @@
+package views
+
+import "github.com/erkannt/rechenschaftspflicht/services"
+
+templ AllEvents(events []services.Event) {
+	<ul>
+		for _, e := range events {
+			<li>
+				<strong>{ e.Tag }</strong> - { e.Comment } - { e.Value } - <time>{ e.CreatedAt }</time>
+			</li>
+		}
+	</ul>
+}

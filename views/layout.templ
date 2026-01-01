@@ -9,6 +9,12 @@ templ Layout(pageContent templ.Component) {
 			<link rel="stylesheet" href="https://unpkg.com/@picocss/pico@1/css/pico.min.css"/>
 		</head>
 		<body>
+			<nav class="container">
+				<ul>
+					<li><a href="/record-event">Record an event</a></li>
+					<li><a href="/all-events">View all events</a></li>
+				</ul>
+			</nav>
 			<main class="container">
 				@pageContent
 			</main>

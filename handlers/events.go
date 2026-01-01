@@ -56,3 +56,18 @@ func RecordEventPostHandler(eventStore *services.EventStore) httprouter.Handle {
 		).Render(r.Context(), w)
 	}
 }
+
+func AllEventsHandler(eventStore *services.EventStore) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		events, err := (*eventStore).GetAll()
+		if err != nil {
+			fmt.Printf("failed to retrieve events: %v\n", err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		views.Layout(
+			views.AllEvents(events),
+		).Render(r.Context(), w)
+	}
+}
