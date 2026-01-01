@@ -32,4 +32,5 @@ func addRoutes(router *httprouter.Router,
 	router.GET("/record-event", mustBeLoggedIn(handlers.RecordEventFormHandler))
 	router.POST("/record-event", mustBeLoggedIn(handlers.RecordEventPostHandler(eventStore)))
 	router.GET("/all-events", mustBeLoggedIn(handlers.AllEventsHandler(eventStore)))
+	router.GET("/logout", mustBeLoggedIn(handlers.LogoutHandler))
 }

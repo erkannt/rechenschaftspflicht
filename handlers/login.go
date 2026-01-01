@@ -73,6 +73,22 @@ func LoginGetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 	http.Redirect(w, r, "/record-event", http.StatusFound)
 }
 
+func LogoutHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	cookie := &http.Cookie{
+		Name:     "auth",
+		Value:    "",
+		Path:     "/",
+		Expires:  time.Unix(0, 0), // Expire immediately
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   false, // set true when using HTTPS
+	}
+	http.SetCookie(w, cookie)
+
+	log.Println("User logged out")
+	http.Redirect(w, r, "/", http.StatusFound)
+}
+
 func CheckYourEmailHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	views.LayoutBare(views.CheckYourEmail()).Render(r.Context(), w)
 }
