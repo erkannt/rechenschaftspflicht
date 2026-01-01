@@ -2,205 +2,25 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
-	"net/smtp"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 
-	"github.com/erkannt/rechenschaftspflicht/views"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/erkannt/rechenschaftspflicht/handlers"
 	"github.com/julienschmidt/httprouter"
 )
 
-// ---------------------------------------------------------------------
-// Configuration & helpers
-// ---------------------------------------------------------------------
-
-var (
-	allowedEmails = []string{
-		"foo@example.com",
-		"alice@example.com",
-		"bob@example.com",
-	}
-	jwtSecret = []byte(getEnv("JWT_SECRET", "default_secret"))
-)
-
-func getEnv(key, fallback string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-	return fallback
-}
-
-func isAllowedEmail(email string) bool {
-	for _, e := range allowedEmails {
-		if strings.EqualFold(e, email) {
-			return true
-		}
-	}
-	return false
-}
-
-// generate a JWT token that expires in 15 minutes
-func generateToken(email string) (string, error) {
-	claims := jwt.MapClaims{
-		"email": email,
-		"exp":   time.Now().Add(15 * time.Minute).Unix(),
-	}
-	t := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return t.SignedString(jwtSecret)
-}
-
-// validate a JWT token and return the contained email address
-func validateToken(tokenStr string) (string, error) {
-	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
-		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method")
-		}
-		return jwtSecret, nil
-	})
-	if err != nil || !token.Valid {
-		return "", fmt.Errorf("invalid token")
-	}
-	if claims, ok := token.Claims.(jwt.MapClaims); ok {
-		if email, ok := claims["email"].(string); ok {
-			return email, nil
-		}
-	}
-	return "", fmt.Errorf("email claim missing")
-}
-
-// send a magic login link via SMTP
-func sendMagicLink(toEmail, token string) error {
-	smtpHost := getEnv("SMTP_HOST", "localhost")
-	smtpPort := getEnv("SMTP_PORT", "1025")
-	smtpUser := getEnv("SMTP_USER", "")
-	smtpPass := getEnv("SMTP_PASS", "")
-	smtpFrom := getEnv("SMTP_FROM", "no-reply@example.com")
-
-	if smtpHost == "" || smtpFrom == "" {
-		return fmt.Errorf("SMTP configuration incomplete")
-	}
-
-	link := fmt.Sprintf("http://localhost:8080/login?token=%s", token)
-	// Include a minimal set of headers; MailCatcher does not require authentication.
-	msg := fmt.Sprintf("From: %s\r\nSubject: Your Magic Login Link\r\n\r\nClick the following link to log in:\n\n%s",
-		smtpFrom, link)
-
-	addr := fmt.Sprintf("%s:%s", smtpHost, smtpPort)
-
-	// MailCatcher does not support AUTH, so only use authentication when credentials are provided.
-	var auth smtp.Auth
-	if smtpUser != "" {
-		auth = smtp.PlainAuth("", smtpUser, smtpPass, smtpHost)
-	}
-
-	return smtp.SendMail(addr, auth, smtpFrom, []string{toEmail}, []byte(msg))
-}
-
-// ---------------------------------------------------------------------
-// Handlers
-// ---------------------------------------------------------------------
-
-func rootHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	views.Login().Render(r.Context(), w)
-}
-
-func checkYourEmailHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	views.CheckYourEmail().Render(r.Context(), w)
-}
-
-// POST "/login" – receive email, validate, send magic link
-func loginPostHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	if err := r.ParseForm(); err != nil {
-		log.Printf("error parsing form: %v", err)
-		http.Redirect(w, r, "/check-your-email", http.StatusFound)
-		return
-	}
-	email := r.FormValue("email")
-	if email == "" {
-		log.Println("email required")
-		http.Redirect(w, r, "/check-your-email", http.StatusFound)
-		return
-	}
-	if !isAllowedEmail(email) {
-		log.Printf("unauthorized email attempt: %s", email)
-		http.Redirect(w, r, "/check-your-email", http.StatusFound)
-		return
-	}
-	token, err := generateToken(email)
-	if err != nil {
-		log.Printf("could not generate token for %s: %v", email, err)
-		http.Redirect(w, r, "/check-your-email", http.StatusFound)
-		return
-	}
-	if err := sendMagicLink(email, token); err != nil {
-		log.Printf("could not send email to %s: %v", email, err)
-		http.Redirect(w, r, "/check-your-email", http.StatusFound)
-		return
-	}
-	log.Printf("magic login link sent to %s", email)
-	http.Redirect(w, r, "/check-your-email", http.StatusFound)
-}
-
-// GET "/login" – validate token and redirect
-func loginGetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	token := r.URL.Query().Get("token")
-	if token == "" {
-		http.Redirect(w, r, "/", http.StatusFound)
-		return
-	}
-	email, err := validateToken(token)
-	if err != nil {
-		http.Redirect(w, r, "/", http.StatusFound)
-		return
-	}
-	// Set a short‑lived auth cookie
-	cookie := &http.Cookie{
-		Name:     "auth",
-		Value:    token,
-		Path:     "/",
-		Expires:  time.Now().Add(15 * time.Minute),
-		HttpOnly: true,
-		Secure:   false, // set true when using HTTPS
-	}
-	http.SetCookie(w, cookie)
-
-	// Optionally log the successful login
-	log.Printf("User %s logged in via magic link", email)
-	http.Redirect(w, r, "/dashboard", http.StatusFound)
-}
-
-// GET "/dashboard" – protected resource
-func dashboardHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	cookie, err := r.Cookie("auth")
-	if err != nil || cookie.Value == "" {
-		w.WriteHeader(http.StatusTooManyRequests) // 429
-		return
-	}
-	if email, err := validateToken(cookie.Value); err != nil || email == "" {
-		w.WriteHeader(http.StatusTooManyRequests) // 429
-		return
-	}
-	fmt.Fprint(w, "success")
-}
-
-// ---------------------------------------------------------------------
-// Main
-// ---------------------------------------------------------------------
-
 func main() {
 	router := httprouter.New()
-	router.GET("/", rootHandler)
-	router.POST("/login", loginPostHandler)
-	router.GET("/login", loginGetHandler)
-	router.GET("/check-your-email", checkYourEmailHandler)
-	router.GET("/dashboard", dashboardHandler)
+
+	router.GET("/", handlers.LandingHandler)
+	router.POST("/login", handlers.LoginPostHandler)
+	router.GET("/login", handlers.LoginGetHandler)
+	router.GET("/check-your-email", handlers.CheckYourEmailHandler)
+	router.GET("/dashboard", handlers.DashboardHandler)
 
 	srv := &http.Server{Addr: ":8080", Handler: router}
 
