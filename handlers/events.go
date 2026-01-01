@@ -23,7 +23,7 @@ func RecordEventFormHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 	views.Layout(views.NewEventForm()).Render(r.Context(), w)
 }
 
-func RecordEventPostHandler(store *services.EventStore) httprouter.Handle {
+func RecordEventPostHandler(eventStore *services.EventStore) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "invalid form data", http.StatusBadRequest)
@@ -43,8 +43,11 @@ func RecordEventPostHandler(store *services.EventStore) httprouter.Handle {
 			CreatedAt: createdAt,
 		}
 
-		// Store the event using the provided EventStore (implementation dependent)
-		_ = store // placeholder to avoid unused variable warning
+		if err := (*eventStore).Record(event); err != nil {
+			fmt.Printf("failed to record event: %v\n", err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
 
 		fmt.Printf("Received: %+v\n", event)
 
