@@ -4,35 +4,18 @@ import (
 	"fmt"
 	"net/smtp"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 )
 
-var (
-	allowedEmails = []string{
-		"foo@example.com",
-		"alice@example.com",
-		"bob@example.com",
-	}
-	jwtSecret = []byte(getEnv("JWT_SECRET", "default_secret"))
-)
+var jwtSecret = []byte(getEnv("JWT_SECRET", "default_secret"))
 
 func getEnv(key, fallback string) string {
 	if v := os.Getenv(key); v != "" {
 		return v
 	}
 	return fallback
-}
-
-func IsAllowedEmail(email string) bool {
-	for _, e := range allowedEmails {
-		if strings.EqualFold(e, email) {
-			return true
-		}
-	}
-	return false
 }
 
 func GenerateToken(email string) (string, error) {
