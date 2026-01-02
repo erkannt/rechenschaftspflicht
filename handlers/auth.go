@@ -32,36 +32,48 @@ func LandingHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
 	views.LayoutBare(views.Login()).Render(r.Context(), w)
 }
 
-func LoginPostHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	if err := r.ParseForm(); err != nil {
-		log.Printf("error parsing form: %v", err)
+func LoginPostHandler(userStore *services.UserStore) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		if err := r.ParseForm(); err != nil {
+			log.Printf("error parsing form: %v", err)
+			http.Redirect(w, r, "/check-your-email", http.StatusFound)
+			return
+		}
+
+		email := r.FormValue("email")
+		if email == "" {
+			log.Println("email required")
+			http.Redirect(w, r, "/check-your-email", http.StatusFound)
+			return
+		}
+
+		exists, err := (*userStore).IsUser(email)
+		if err != nil {
+			log.Printf("error checking user %s: %v", email, err)
+			http.Redirect(w, r, "/check-your-email", http.StatusFound)
+			return
+		}
+		if !exists {
+			log.Printf("unauthorized email attempt: %s", email)
+			http.Redirect(w, r, "/check-your-email", http.StatusFound)
+			return
+		}
+
+		token, err := services.GenerateToken(email)
+		if err != nil {
+			log.Printf("could not generate token for %s: %v", email, err)
+			http.Redirect(w, r, "/check-your-email", http.StatusFound)
+			return
+		}
+		if err := services.SendMagicLink(email, token); err != nil {
+			log.Printf("could not send email to %s: %v", email, err)
+			http.Redirect(w, r, "/check-your-email", http.StatusFound)
+			return
+		}
+		log.Printf("magic login link sent to %s", email)
+
 		http.Redirect(w, r, "/check-your-email", http.StatusFound)
-		return
 	}
-	email := r.FormValue("email")
-	if email == "" {
-		log.Println("email required")
-		http.Redirect(w, r, "/check-your-email", http.StatusFound)
-		return
-	}
-	if !services.IsAllowedEmail(email) {
-		log.Printf("unauthorized email attempt: %s", email)
-		http.Redirect(w, r, "/check-your-email", http.StatusFound)
-		return
-	}
-	token, err := services.GenerateToken(email)
-	if err != nil {
-		log.Printf("could not generate token for %s: %v", email, err)
-		http.Redirect(w, r, "/check-your-email", http.StatusFound)
-		return
-	}
-	if err := services.SendMagicLink(email, token); err != nil {
-		log.Printf("could not send email to %s: %v", email, err)
-		http.Redirect(w, r, "/check-your-email", http.StatusFound)
-		return
-	}
-	log.Printf("magic login link sent to %s", email)
-	http.Redirect(w, r, "/check-your-email", http.StatusFound)
 }
 
 func LoginGetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {

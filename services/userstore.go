@@ -2,15 +2,6 @@ package services
 
 import (
 	"database/sql"
-	"strings"
-)
-
-var (
-	allowedEmails = []string{
-		"foo@example.com",
-		"alice@example.com",
-		"bob@example.com",
-	}
 )
 
 type UserStore interface {
@@ -37,13 +28,4 @@ func (s *SQLiteUserStore) IsUser(email string) (bool, error) {
 		return false, err
 	}
 	return count > 0, nil
-}
-
-func IsAllowedEmail(email string) bool {
-	for _, e := range allowedEmails {
-		if strings.EqualFold(e, email) {
-			return true
-		}
-	}
-	return false
 }

@@ -19,9 +19,10 @@ func main() {
 		log.Fatalf("Could not init database: %v", err)
 	}
 	eventStore := services.NewEventStore(database)
+	userStore := services.NewUserStore(database)
 
 	router := httprouter.New()
-	addRoutes(router, &eventStore)
+	addRoutes(router, &eventStore, &userStore)
 
 	srv := &http.Server{Addr: ":8080", Handler: router}
 

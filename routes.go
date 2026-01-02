@@ -17,10 +17,13 @@ func mustBeLoggedIn(h httprouter.Handle) httprouter.Handle {
 		h(w, r, ps)
 	}
 }
-func addRoutes(router *httprouter.Router,
-	eventStore *services.EventStore) {
+func addRoutes(
+	router *httprouter.Router,
+	eventStore *services.EventStore,
+	userStore *services.UserStore,
+) {
 	router.GET("/", handlers.LandingHandler)
-	router.POST("/login", handlers.LoginPostHandler)
+	router.POST("/login", handlers.LoginPostHandler(userStore))
 	router.GET("/login", handlers.LoginGetHandler)
 	router.GET("/check-your-email", handlers.CheckYourEmailHandler)
 	router.GET("/record-event", mustBeLoggedIn(handlers.RecordEventFormHandler))
