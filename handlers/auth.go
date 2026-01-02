@@ -32,7 +32,7 @@ func LandingHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
 	views.LayoutBare(views.Login()).Render(r.Context(), w)
 }
 
-func LoginPostHandler(userStore *services.UserStore) httprouter.Handle {
+func LoginPostHandler(userStore services.UserStore) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		if err := r.ParseForm(); err != nil {
 			log.Printf("error parsing form: %v", err)
@@ -47,7 +47,7 @@ func LoginPostHandler(userStore *services.UserStore) httprouter.Handle {
 			return
 		}
 
-		exists, err := (*userStore).IsUser(email)
+		exists, err := userStore.IsUser(email)
 		if err != nil {
 			log.Printf("error checking user %s: %v", email, err)
 			http.Redirect(w, r, "/check-your-email", http.StatusFound)

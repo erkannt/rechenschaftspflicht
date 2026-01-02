@@ -14,7 +14,7 @@ func RecordEventFormHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 	views.LayoutWithNav(views.NewEventForm()).Render(r.Context(), w)
 }
 
-func RecordEventPostHandler(eventStore *services.EventStore) httprouter.Handle {
+func RecordEventPostHandler(eventStore services.EventStore) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "invalid form data", http.StatusBadRequest)
@@ -34,7 +34,7 @@ func RecordEventPostHandler(eventStore *services.EventStore) httprouter.Handle {
 			CreatedAt: createdAt,
 		}
 
-		if err := (*eventStore).Record(event); err != nil {
+		if err := eventStore.Record(event); err != nil {
 			fmt.Printf("failed to record event: %v\n", err)
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
@@ -48,9 +48,9 @@ func RecordEventPostHandler(eventStore *services.EventStore) httprouter.Handle {
 	}
 }
 
-func AllEventsHandler(eventStore *services.EventStore) httprouter.Handle {
+func AllEventsHandler(eventStore services.EventStore) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		events, err := (*eventStore).GetAll()
+		events, err := eventStore.GetAll()
 		if err != nil {
 			fmt.Printf("failed to retrieve events: %v\n", err)
 			http.Error(w, "internal server error", http.StatusInternalServerError)

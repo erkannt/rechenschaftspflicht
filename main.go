@@ -22,7 +22,7 @@ func main() {
 	userStore := services.NewUserStore(database)
 
 	router := httprouter.New()
-	addRoutes(router, &eventStore, &userStore)
+	addRoutes(router, eventStore, userStore)
 
 	srv := &http.Server{Addr: ":8080", Handler: router}
 

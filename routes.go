@@ -19,8 +19,8 @@ func mustBeLoggedIn(h httprouter.Handle) httprouter.Handle {
 }
 func addRoutes(
 	router *httprouter.Router,
-	eventStore *services.EventStore,
-	userStore *services.UserStore,
+	eventStore services.EventStore,
+	userStore services.UserStore,
 ) {
 	router.GET("/", handlers.LandingHandler)
 	router.POST("/login", handlers.LoginPostHandler(userStore))
