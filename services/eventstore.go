@@ -44,7 +44,19 @@ func InitDB() (*sql.DB, error) {
 		createdAt TEXT
 	);
 	`
+
+	createUsersTable := `
+	CREATE TABLE IF NOT EXISTS users (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		username TEXT,
+		email TEXT
+	);
+	`
+
 	if _, err = db.Exec(createEventsTable); err != nil {
+		return nil, err
+	}
+	if _, err = db.Exec(createUsersTable); err != nil {
 		return nil, err
 	}
 
