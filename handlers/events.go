@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -11,7 +12,12 @@ import (
 )
 
 func RecordEventFormHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	views.LayoutWithNav(views.NewEventForm()).Render(r.Context(), w)
+	err := views.LayoutWithNav(views.NewEventForm()).Render(r.Context(), w)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		log.Printf("Error rendering layout: %v", err)
+		return
+	}
 }
 
 func RecordEventPostHandler(eventStore services.EventStore) httprouter.Handle {
@@ -42,9 +48,12 @@ func RecordEventPostHandler(eventStore services.EventStore) httprouter.Handle {
 
 		fmt.Printf("Received: %+v\n", event)
 
-		views.LayoutWithNav(
-			views.NewEventFormWithSuccessBanner(),
-		).Render(r.Context(), w)
+		err := views.LayoutWithNav(views.NewEventFormWithSuccessBanner()).Render(r.Context(), w)
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			log.Printf("Error rendering layout: %v", err)
+			return
+		}
 	}
 }
 
@@ -57,8 +66,11 @@ func AllEventsHandler(eventStore services.EventStore) httprouter.Handle {
 			return
 		}
 
-		views.LayoutWithNav(
-			views.AllEvents(events),
-		).Render(r.Context(), w)
+		err = views.LayoutWithNav(views.AllEvents(events)).Render(r.Context(), w)
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			log.Printf("Error rendering layout: %v", err)
+			return
+		}
 	}
 }

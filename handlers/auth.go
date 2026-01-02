@@ -29,7 +29,12 @@ func LandingHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
 		http.Redirect(w, r, "/record-event", http.StatusFound)
 		return
 	}
-	views.LayoutBare(views.Login()).Render(r.Context(), w)
+	err := views.LayoutBare(views.Login()).Render(r.Context(), w)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		log.Printf("Error rendering layout: %v", err)
+		return
+	}
 }
 
 func LoginPostHandler(userStore services.UserStore) httprouter.Handle {
@@ -120,5 +125,10 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 }
 
 func CheckYourEmailHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	views.LayoutBare(views.CheckYourEmail()).Render(r.Context(), w)
+	err := views.LayoutBare(views.CheckYourEmail()).Render(r.Context(), w)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		log.Printf("Error rendering layout: %v", err)
+		return
+	}
 }
