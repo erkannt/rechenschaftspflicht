@@ -35,7 +35,6 @@ func IsAllowedEmail(email string) bool {
 	return false
 }
 
-// generate a JWT token that expires in 15 minutes
 func GenerateToken(email string) (string, error) {
 	claims := jwt.MapClaims{
 		"email": email,
@@ -45,9 +44,8 @@ func GenerateToken(email string) (string, error) {
 	return t.SignedString(jwtSecret)
 }
 
-// validate a JWT token and return the contained email address
 func ValidateToken(tokenStr string) (string, error) {
-	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
+	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method")
 		}
@@ -64,7 +62,6 @@ func ValidateToken(tokenStr string) (string, error) {
 	return "", fmt.Errorf("email claim missing")
 }
 
-// send a magic login link via SMTP
 func SendMagicLink(toEmail, token string) error {
 	smtpHost := getEnv("SMTP_HOST", "localhost")
 	smtpPort := getEnv("SMTP_PORT", "1025")
@@ -77,7 +74,6 @@ func SendMagicLink(toEmail, token string) error {
 	}
 
 	link := fmt.Sprintf("http://localhost:8080/login?token=%s", token)
-	// Include a minimal set of headers; MailCatcher does not require authentication.
 	msg := fmt.Sprintf("From: %s\r\nSubject: Your Magic Login Link\r\n\r\nClick the following link to log in:\n\n%s",
 		smtpFrom, link)
 
