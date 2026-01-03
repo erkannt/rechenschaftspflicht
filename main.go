@@ -9,17 +9,19 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/erkannt/rechenschaftspflicht/services"
+	database "github.com/erkannt/rechenschaftspflicht/services/db"
+	"github.com/erkannt/rechenschaftspflicht/services/eventstore"
+	"github.com/erkannt/rechenschaftspflicht/services/userstore"
 	"github.com/julienschmidt/httprouter"
 )
 
 func main() {
-	database, err := services.InitDB()
+	database, err := database.InitDB()
 	if err != nil {
 		log.Fatalf("Could not init database: %v", err)
 	}
-	eventStore := services.NewEventStore(database)
-	userStore := services.NewUserStore(database)
+	eventStore := eventstore.NewEventStore(database)
+	userStore := userstore.NewUserStore(database)
 
 	router := httprouter.New()
 	addRoutes(router, eventStore, userStore)

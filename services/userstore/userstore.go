@@ -1,4 +1,4 @@
-package services
+package userstore
 
 import (
 	"database/sql"

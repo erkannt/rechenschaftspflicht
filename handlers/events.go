@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/erkannt/rechenschaftspflicht/services"
+	"github.com/erkannt/rechenschaftspflicht/services/eventstore"
 	"github.com/erkannt/rechenschaftspflicht/views"
 	"github.com/julienschmidt/httprouter"
 )
@@ -20,7 +20,7 @@ func RecordEventFormHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 	}
 }
 
-func RecordEventPostHandler(eventStore services.EventStore) httprouter.Handle {
+func RecordEventPostHandler(eventStore eventstore.EventStore) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "invalid form data", http.StatusBadRequest)
@@ -32,9 +32,8 @@ func RecordEventPostHandler(eventStore services.EventStore) httprouter.Handle {
 		value := r.FormValue("value")
 
 		recordedAt := time.Now().Format(time.RFC3339)
-		recordedBy := auth
 
-		event := services.Event{
+		event := eventstore.Event{
 			Tag:        tag,
 			Comment:    comment,
 			Value:      value,
@@ -58,7 +57,7 @@ func RecordEventPostHandler(eventStore services.EventStore) httprouter.Handle {
 	}
 }
 
-func AllEventsHandler(eventStore services.EventStore) httprouter.Handle {
+func AllEventsHandler(eventStore eventstore.EventStore) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		events, err := eventStore.GetAll()
 		if err != nil {

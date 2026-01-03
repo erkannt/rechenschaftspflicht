@@ -4,7 +4,8 @@ import (
 	"net/http"
 
 	"github.com/erkannt/rechenschaftspflicht/handlers"
-	"github.com/erkannt/rechenschaftspflicht/services"
+	"github.com/erkannt/rechenschaftspflicht/services/eventstore"
+	"github.com/erkannt/rechenschaftspflicht/services/userstore"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -19,8 +20,8 @@ func mustBeLoggedIn(h httprouter.Handle) httprouter.Handle {
 }
 func addRoutes(
 	router *httprouter.Router,
-	eventStore services.EventStore,
-	userStore services.UserStore,
+	eventStore eventstore.EventStore,
+	userStore userstore.UserStore,
 ) {
 	router.GET("/", handlers.LandingHandler)
 	router.POST("/login", handlers.LoginPostHandler(userStore))

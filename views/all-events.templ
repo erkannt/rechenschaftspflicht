@@ -1,8 +1,8 @@
 package views
 
-import "github.com/erkannt/rechenschaftspflicht/services"
+import "github.com/erkannt/rechenschaftspflicht/services/eventstore"
 
-templ AllEvents(events []services.Event) {
+templ AllEvents(events []eventstore.Event) {
 	<h1>All Events</h1>
 	if len(events) == 0 {
 		<p>No events have been recorded.</p>

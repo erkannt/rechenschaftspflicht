@@ -5,7 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/erkannt/rechenschaftspflicht/services"
+	"github.com/erkannt/rechenschaftspflicht/services/magiclinks"
+	"github.com/erkannt/rechenschaftspflicht/services/userstore"
 	"github.com/erkannt/rechenschaftspflicht/views"
 	"github.com/julienschmidt/httprouter"
 )
@@ -15,7 +16,7 @@ func IsLoggedIn(r *http.Request) bool {
 	if err != nil || cookie.Value == "" {
 		return false
 	}
-	if email, err := services.ValidateToken(cookie.Value); err != nil || email == "" {
+	if email, err := magiclinks.ValidateToken(cookie.Value); err != nil || email == "" {
 		return false
 	}
 	return true
@@ -29,7 +30,7 @@ func GetLoggedInUserEmail(r *http.Request) (string, error) {
 	if cookie.Value == "" {
 		return "", http.ErrNoCookie
 	}
-	email, err := services.ValidateToken(cookie.Value)
+	email, err := magiclinks.ValidateToken(cookie.Value)
 	if err != nil {
 		return "", err
 	}
@@ -39,7 +40,7 @@ func GetLoggedInUserEmail(r *http.Request) (string, error) {
 func LandingHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if IsLoggedIn(r) {
 		cookie, _ := r.Cookie("auth")
-		email, _ := services.ValidateToken(cookie.Value)
+		email, _ := magiclinks.ValidateToken(cookie.Value)
 		log.Printf("User %s already logged in, redirecting to /record-event", email)
 		http.Redirect(w, r, "/record-event", http.StatusFound)
 		return
@@ -52,7 +53,7 @@ func LandingHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
 	}
 }
 
-func LoginPostHandler(userStore services.UserStore) httprouter.Handle {
+func LoginPostHandler(userStore userstore.UserStore) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		if err := r.ParseForm(); err != nil {
 			log.Printf("error parsing form: %v", err)
@@ -79,13 +80,13 @@ func LoginPostHandler(userStore services.UserStore) httprouter.Handle {
 			return
 		}
 
-		token, err := services.GenerateToken(email)
+		token, err := magiclinks.GenerateToken(email)
 		if err != nil {
 			log.Printf("could not generate token for %s: %v", email, err)
 			http.Redirect(w, r, "/check-your-email", http.StatusFound)
 			return
 		}
-		if err := services.SendMagicLink(email, token); err != nil {
+		if err := magiclinks.SendMagicLink(email, token); err != nil {
 			log.Printf("could not send email to %s: %v", email, err)
 			http.Redirect(w, r, "/check-your-email", http.StatusFound)
 			return
@@ -102,7 +103,7 @@ func LoginGetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
-	email, err := services.ValidateToken(token)
+	email, err := magiclinks.ValidateToken(token)
 	if err != nil {
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
