@@ -7,10 +7,11 @@ import (
 )
 
 type Event struct {
-	Tag       string `json:"tag"`
-	Comment   string `json:"comment"`
-	Value     string `json:"value"`
-	CreatedAt string `json:"createdAt"`
+	Tag        string `json:"tag"`
+	Comment    string `json:"comment"`
+	Value      string `json:"value"`
+	RecordedAt string `json:"recordedAt"`
+	RecordedBy string `json:"recordedBy"`
 }
 
 type EventStore interface {
@@ -28,7 +29,7 @@ func NewEventStore(db *sql.DB) EventStore {
 
 func (s *SQLiteEventStore) Record(event Event) error {
 	stmt := `INSERT INTO events (tag, comment, value, createdAt) VALUES (?, ?, ?, ?);`
-	_, err := s.db.Exec(stmt, event.Tag, event.Comment, event.Value, event.CreatedAt)
+	_, err := s.db.Exec(stmt, event.Tag, event.Comment, event.Value, event.RecordedAt)
 	return err
 }
 
@@ -42,7 +43,7 @@ func (s *SQLiteEventStore) GetAll() ([]Event, error) {
 	var events []Event
 	for rows.Next() {
 		var e Event
-		if err := rows.Scan(&e.Tag, &e.Comment, &e.Value, &e.CreatedAt); err != nil {
+		if err := rows.Scan(&e.Tag, &e.Comment, &e.Value, &e.RecordedAt); err != nil {
 			return nil, err
 		}
 		events = append(events, e)

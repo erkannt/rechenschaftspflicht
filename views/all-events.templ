@@ -10,7 +10,7 @@ templ AllEvents(events []services.Event) {
 		<ul>
 			for _, e := range events {
 				<li>
-					<strong>{ e.Tag }</strong> - { e.Comment } - { e.Value } - <time>{ e.CreatedAt }</time>
+					<strong>{ e.RecordedBy }</strong> { e.Tag } - { e.Value } - <time>{ e.RecordedAt }</time> - { e.Comment }
 				</li>
 			}
 		</ul>
