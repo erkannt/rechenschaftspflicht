@@ -32,6 +32,7 @@ func RecordEventPostHandler(eventStore services.EventStore) httprouter.Handle {
 		value := r.FormValue("value")
 
 		recordedAt := time.Now().Format(time.RFC3339)
+		recordedBy := auth
 
 		event := services.Event{
 			Tag:        tag,

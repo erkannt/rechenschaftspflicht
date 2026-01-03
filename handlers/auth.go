@@ -21,6 +21,21 @@ func IsLoggedIn(r *http.Request) bool {
 	return true
 }
 
+func GetLoggedInUserEmail(r *http.Request) (string, error) {
+	cookie, err := r.Cookie("auth")
+	if err != nil {
+		return "", err
+	}
+	if cookie.Value == "" {
+		return "", http.ErrNoCookie
+	}
+	email, err := services.ValidateToken(cookie.Value)
+	if err != nil {
+		return "", err
+	}
+	return email, nil
+}
+
 func LandingHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if IsLoggedIn(r) {
 		cookie, _ := r.Cookie("auth")
