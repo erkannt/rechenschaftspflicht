@@ -31,13 +31,13 @@ func RecordEventPostHandler(eventStore services.EventStore) httprouter.Handle {
 		comment := r.FormValue("comment")
 		value := r.FormValue("value")
 
-		createdAt := time.Now().Format(time.RFC3339)
+		recordedAt := time.Now().Format(time.RFC3339)
 
 		event := services.Event{
 			Tag:        tag,
 			Comment:    comment,
 			Value:      value,
-			RecordedAt: createdAt,
+			RecordedAt: recordedAt,
 		}
 
 		if err := eventStore.Record(event); err != nil {
