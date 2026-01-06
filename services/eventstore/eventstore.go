@@ -34,7 +34,12 @@ func (s *SQLiteEventStore) Record(event Event) error {
 }
 
 func (s *SQLiteEventStore) GetAll() ([]Event, error) {
-	rows, err := s.db.Query(`SELECT tag, comment, value, recordedAt, recordedBy FROM events ORDER BY id;`)
+	rows, err := s.db.Query(`
+		SELECT e.tag, e.comment, e.value, e.recordedAt, u.username
+		FROM events e
+		LEFT JOIN users u ON e.recordedBy = u.email
+		ORDER BY e.recordedAt DESC;
+	`)
 	if err != nil {
 		return nil, err
 	}
