@@ -28,13 +28,13 @@ func NewEventStore(db *sql.DB) EventStore {
 }
 
 func (s *SQLiteEventStore) Record(event Event) error {
-	stmt := `INSERT INTO events (tag, comment, value, createdAt) VALUES (?, ?, ?, ?);`
-	_, err := s.db.Exec(stmt, event.Tag, event.Comment, event.Value, event.RecordedAt)
+	stmt := `INSERT INTO events (tag, comment, value, recordedAt, recordedBy) VALUES (?, ?, ?, ?, ?);`
+	_, err := s.db.Exec(stmt, event.Tag, event.Comment, event.Value, event.RecordedAt, event.RecordedBy)
 	return err
 }
 
 func (s *SQLiteEventStore) GetAll() ([]Event, error) {
-	rows, err := s.db.Query(`SELECT tag, comment, value, createdAt FROM events ORDER BY id;`)
+	rows, err := s.db.Query(`SELECT tag, comment, value, recordedAt, recordedBy FROM events ORDER BY id;`)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (s *SQLiteEventStore) GetAll() ([]Event, error) {
 	var events []Event
 	for rows.Next() {
 		var e Event
-		if err := rows.Scan(&e.Tag, &e.Comment, &e.Value, &e.RecordedAt); err != nil {
+		if err := rows.Scan(&e.Tag, &e.Comment, &e.Value, &e.RecordedAt, &e.RecordedBy); err != nil {
 			return nil, err
 		}
 		events = append(events, e)

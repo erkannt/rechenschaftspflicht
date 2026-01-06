@@ -25,7 +25,8 @@ func InitDB() (*sql.DB, error) {
 		tag TEXT,
 		comment TEXT,
 		value TEXT,
-		createdAt TEXT
+		recordedAt TEXT,
+		recordedBy TEXT
 	);
 	`
 
