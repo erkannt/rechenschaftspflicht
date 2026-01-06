@@ -3,42 +3,16 @@ package handlers
 import (
 	"log"
 	"net/http"
-	"time"
 
+	"github.com/erkannt/rechenschaftspflicht/services/authcookie"
 	"github.com/erkannt/rechenschaftspflicht/services/magiclinks"
 	"github.com/erkannt/rechenschaftspflicht/services/userstore"
 	"github.com/erkannt/rechenschaftspflicht/views"
 	"github.com/julienschmidt/httprouter"
 )
 
-func IsLoggedIn(r *http.Request) bool {
-	cookie, err := r.Cookie("auth")
-	if err != nil || cookie.Value == "" {
-		return false
-	}
-	if email, err := magiclinks.ValidateToken(cookie.Value); err != nil || email == "" {
-		return false
-	}
-	return true
-}
-
-func GetLoggedInUserEmail(r *http.Request) (string, error) {
-	cookie, err := r.Cookie("auth")
-	if err != nil {
-		return "", err
-	}
-	if cookie.Value == "" {
-		return "", http.ErrNoCookie
-	}
-	email, err := magiclinks.ValidateToken(cookie.Value)
-	if err != nil {
-		return "", err
-	}
-	return email, nil
-}
-
 func LandingHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	if IsLoggedIn(r) {
+	if authcookie.IsLoggedIn(r) {
 		cookie, _ := r.Cookie("auth")
 		email, _ := magiclinks.ValidateToken(cookie.Value)
 		log.Printf("User %s already logged in, redirecting to /record-event", email)
@@ -108,33 +82,17 @@ func LoginGetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
-	// Set a short‑lived auth cookie
-	cookie := &http.Cookie{
-		Name:     "auth",
-		Value:    token,
-		Path:     "/",
-		Expires:  time.Now().Add(15 * time.Minute),
-		HttpOnly: true,
-		Secure:   false, // set true when using HTTPS
-	}
-	http.SetCookie(w, cookie)
 
-	// Optionally log the successful login
+	cookie := authcookie.LoggedIn(token)
+	http.SetCookie(w, &cookie)
+
 	log.Printf("User %s logged in via magic link", email)
 	http.Redirect(w, r, "/record-event", http.StatusFound)
 }
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	cookie := &http.Cookie{
-		Name:     "auth",
-		Value:    "",
-		Path:     "/",
-		Expires:  time.Unix(0, 0), // Expire immediately
-		MaxAge:   -1,
-		HttpOnly: true,
-		Secure:   false, // set true when using HTTPS
-	}
-	http.SetCookie(w, cookie)
+	cookie := authcookie.LoggedOut()
+	http.SetCookie(w, &cookie)
 
 	log.Println("User logged out")
 	http.Redirect(w, r, "/", http.StatusFound)

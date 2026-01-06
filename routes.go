@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/erkannt/rechenschaftspflicht/handlers"
+	"github.com/erkannt/rechenschaftspflicht/services/authcookie"
 	"github.com/erkannt/rechenschaftspflicht/services/eventstore"
 	"github.com/erkannt/rechenschaftspflicht/services/userstore"
 	"github.com/julienschmidt/httprouter"
@@ -11,7 +12,7 @@ import (
 
 func mustBeLoggedIn(h httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		if !handlers.IsLoggedIn(r) {
+		if !authcookie.IsLoggedIn(r) {
 			http.Redirect(w, r, "/login", http.StatusFound)
 			return
 		}
