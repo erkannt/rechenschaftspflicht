@@ -6,12 +6,12 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - mailcatcher
+      - mailpit
     restart: unless-stopped
 
-  mailcatcher:
-    image: sj26/mailcatcher
+  mailpit:
+    image: axllent/mailpit
     ports:
-      - "1080:1080"
+      - "1080:8025"
       - "1025:1025"
     restart: unless-stopped
