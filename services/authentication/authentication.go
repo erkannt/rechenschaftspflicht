@@ -10,8 +10,6 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-var jwtSecret = []byte(getEnv("JWT_SECRET", "default_secret"))
-
 func getEnv(key, fallback string) string {
 	if v := os.Getenv(key); v != "" {
 		return v
@@ -19,21 +17,83 @@ func getEnv(key, fallback string) string {
 	return fallback
 }
 
-func GenerateToken(email string) (string, error) {
+// Auth defines the public contract for the service.
+type Auth interface {
+	GenerateToken(email string) (string, error)
+	ValidateToken(tokenStr string) (string, error)
+	SendMagicLink(toEmail, token string) error
+	IsLoggedIn(r *http.Request) bool
+	GetLoggedInUserEmail(r *http.Request) (string, error)
+}
+
+// Config holds configuration required to create a MagicLinks service.
+type Config struct {
+	JWTSecret string
+	SMTPHost  string
+	SMTPPort  string
+	SMTPUser  string
+	SMTPPass  string
+	SMTPFrom  string
+}
+
+// magicLinksSvc is the concrete implementation holding internal state.
+type magicLinksSvc struct {
+	jwtSecret []byte
+	smtpAuth  smtp.Auth
+	smtpFrom  string
+	smtpAddr  string
+}
+
+// New creates a new MagicLinks service with the supplied configuration.
+// It derives sensible defaults from environment variables if fields are empty.
+func New(cfg Config) Auth {
+	// Apply defaults from environment if not provided.
+	if cfg.JWTSecret == "" {
+		cfg.JWTSecret = getEnv("JWT_SECRET", "default_secret")
+	}
+	if cfg.SMTPHost == "" {
+		cfg.SMTPHost = getEnv("SMTP_HOST", "localhost")
+	}
+	if cfg.SMTPPort == "" {
+		cfg.SMTPPort = getEnv("SMTP_PORT", "1025")
+	}
+	if cfg.SMTPFrom == "" {
+		cfg.SMTPFrom = getEnv("SMTP_FROM", "no-reply@example.com")
+	}
+
+	// Set up SMTP authentication only when a username is supplied.
+	var auth smtp.Auth
+	if cfg.SMTPUser != "" {
+		auth = smtp.PlainAuth("", cfg.SMTPUser, cfg.SMTPPass, cfg.SMTPHost)
+	}
+
+	addr := fmt.Sprintf("%s:%s", cfg.SMTPHost, cfg.SMTPPort)
+
+	return &magicLinksSvc{
+		jwtSecret: []byte(cfg.JWTSecret),
+		smtpAuth:  auth,
+		smtpFrom:  cfg.SMTPFrom,
+		smtpAddr:  addr,
+	}
+}
+
+// GenerateToken creates a JWT containing the email claim that expires in 15 minutes.
+func (s *magicLinksSvc) GenerateToken(email string) (string, error) {
 	claims := jwt.MapClaims{
 		"email": email,
 		"exp":   time.Now().Add(15 * time.Minute).Unix(),
 	}
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return t.SignedString(jwtSecret)
+	return t.SignedString(s.jwtSecret)
 }
 
-func ValidateToken(tokenStr string) (string, error) {
-	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (any, error) {
+// ValidateToken parses and validates the JWT, returning the embedded email if valid.
+func (s *magicLinksSvc) ValidateToken(input string) (string, error) {
+	token, err := jwt.Parse(input, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method")
 		}
-		return jwtSecret, nil
+		return s.jwtSecret, nil
 	})
 	if err != nil || !token.Valid {
 		return "", fmt.Errorf("invalid token")
@@ -46,45 +106,34 @@ func ValidateToken(tokenStr string) (string, error) {
 	return "", fmt.Errorf("email claim missing")
 }
 
-func SendMagicLink(toEmail, token string) error {
-	smtpHost := getEnv("SMTP_HOST", "localhost")
-	smtpPort := getEnv("SMTP_PORT", "1025")
-	smtpUser := getEnv("SMTP_USER", "")
-	smtpPass := getEnv("SMTP_PASS", "")
-	smtpFrom := getEnv("SMTP_FROM", "no-reply@example.com")
-
-	if smtpHost == "" || smtpFrom == "" {
-		return fmt.Errorf("SMTP configuration incomplete")
+// SendMagicLink sends an email containing a login link with the supplied token.
+func (s *magicLinksSvc) SendMagicLink(toEmail, token string) error {
+	if s.smtpFrom == "" {
+		return fmt.Errorf("SMTP configuration incomplete: missing from address")
 	}
 
 	link := fmt.Sprintf("http://localhost:8080/login?token=%s", token)
-	msg := fmt.Sprintf("From: %s\r\nSubject: Your Magic Login Link\r\n\r\nClick the following link to log in:\n\n%s",
-		smtpFrom, link)
+	msg := fmt.Sprintf(
+		"From: %s\r\nSubject: Your Magic Login Link\r\n\r\nClick the following link to log in:\n\n%s",
+		s.smtpFrom,
+		link,
+	)
 
-	addr := fmt.Sprintf("%s:%s", smtpHost, smtpPort)
-
-	// MailCatcher does not support AUTH, so only use authentication when credentials are provided.
-	var auth smtp.Auth
-	if smtpUser != "" {
-		auth = smtp.PlainAuth("", smtpUser, smtpPass, smtpHost)
-	}
-
-	return smtp.SendMail(addr, auth, smtpFrom, []string{toEmail}, []byte(msg))
+	return smtp.SendMail(s.smtpAddr, s.smtpAuth, s.smtpFrom, []string{toEmail}, []byte(msg))
 }
 
-
-func IsLoggedIn(r *http.Request) bool {
+func (s *magicLinksSvc) IsLoggedIn(r *http.Request) bool {
 	cookie, err := r.Cookie("auth")
 	if err != nil || cookie.Value == "" {
 		return false
 	}
-	if email, err := ValidateToken(cookie.Value); err != nil || email == "" {
+	if email, err := s.ValidateToken(cookie.Value); err != nil || email == "" {
 		return false
 	}
 	return true
 }
 
-func GetLoggedInUserEmail(r *http.Request) (string, error) {
+func (s *magicLinksSvc) GetLoggedInUserEmail(r *http.Request) (string, error) {
 	cookie, err := r.Cookie("auth")
 	if err != nil {
 		return "", err
@@ -92,7 +141,7 @@ func GetLoggedInUserEmail(r *http.Request) (string, error) {
 	if cookie.Value == "" {
 		return "", http.ErrNoCookie
 	}
-	email, err := ValidateToken(cookie.Value)
+	email, err := s.ValidateToken(cookie.Value)
 	if err != nil {
 		return "", err
 	}

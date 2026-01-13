@@ -21,7 +21,7 @@ func RecordEventFormHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 	}
 }
 
-func RecordEventPostHandler(eventStore eventstore.EventStore) httprouter.Handle {
+func RecordEventPostHandler(eventStore eventstore.EventStore, auth authentication.Auth) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "invalid form data", http.StatusBadRequest)
@@ -33,7 +33,7 @@ func RecordEventPostHandler(eventStore eventstore.EventStore) httprouter.Handle 
 		value := r.FormValue("value")
 
 		recordedAt := time.Now().Format(time.RFC3339)
-		recordedBy, _ := authentication.GetLoggedInUserEmail(r)
+		recordedBy, _ := auth.GetLoggedInUserEmail(r)
 
 		event := eventstore.Event{
 			Tag:        tag,

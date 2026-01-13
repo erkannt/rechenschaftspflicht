@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/erkannt/rechenschaftspflicht/services/authentication"
 	database "github.com/erkannt/rechenschaftspflicht/services/db"
 	"github.com/erkannt/rechenschaftspflicht/services/eventstore"
 	"github.com/erkannt/rechenschaftspflicht/services/userstore"
@@ -27,10 +28,11 @@ func run(ctx context.Context, stdout io.Writer) error {
 	}
 	eventStore := eventstore.NewEventStore(db)
 	userStore := userstore.NewUserStore(db)
+	auth := authentication.New(authentication.Config{})
 
 	// Create server
 	router := httprouter.New()
-	addRoutes(router, eventStore, userStore)
+	addRoutes(router, eventStore, userStore, auth)
 	srv := &http.Server{Addr: ":8080", Handler: router}
 
 	// Start the server
