@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/erkannt/rechenschaftspflicht/services/authcookie"
+	"github.com/erkannt/rechenschaftspflicht/services/authentication"
 	"github.com/erkannt/rechenschaftspflicht/services/eventstore"
 	"github.com/erkannt/rechenschaftspflicht/views"
 	"github.com/julienschmidt/httprouter"
@@ -33,7 +33,7 @@ func RecordEventPostHandler(eventStore eventstore.EventStore) httprouter.Handle 
 		value := r.FormValue("value")
 
 		recordedAt := time.Now().Format(time.RFC3339)
-		recordedBy, _ := authcookie.GetLoggedInUserEmail(r)
+		recordedBy, _ := authentication.GetLoggedInUserEmail(r)
 
 		event := eventstore.Event{
 			Tag:        tag,

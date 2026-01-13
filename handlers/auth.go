@@ -4,17 +4,16 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/erkannt/rechenschaftspflicht/services/authcookie"
-	"github.com/erkannt/rechenschaftspflicht/services/magiclinks"
+	"github.com/erkannt/rechenschaftspflicht/services/authentication"
 	"github.com/erkannt/rechenschaftspflicht/services/userstore"
 	"github.com/erkannt/rechenschaftspflicht/views"
 	"github.com/julienschmidt/httprouter"
 )
 
 func LandingHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	if authcookie.IsLoggedIn(r) {
+	if authentication.IsLoggedIn(r) {
 		cookie, _ := r.Cookie("auth")
-		email, _ := magiclinks.ValidateToken(cookie.Value)
+		email, _ := authentication.ValidateToken(cookie.Value)
 		log.Printf("User %s already logged in, redirecting to /record-event", email)
 		http.Redirect(w, r, "/record-event", http.StatusFound)
 		return
@@ -54,13 +53,13 @@ func LoginPostHandler(userStore userstore.UserStore) httprouter.Handle {
 			return
 		}
 
-		token, err := magiclinks.GenerateToken(email)
+		token, err := authentication.GenerateToken(email)
 		if err != nil {
 			log.Printf("could not generate token for %s: %v", email, err)
 			http.Redirect(w, r, "/check-your-email", http.StatusFound)
 			return
 		}
-		if err := magiclinks.SendMagicLink(email, token); err != nil {
+		if err := authentication.SendMagicLink(email, token); err != nil {
 			log.Printf("could not send email to %s: %v", email, err)
 			http.Redirect(w, r, "/check-your-email", http.StatusFound)
 			return
@@ -77,13 +76,13 @@ func LoginGetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
-	email, err := magiclinks.ValidateToken(token)
+	email, err := authentication.ValidateToken(token)
 	if err != nil {
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
 
-	cookie := authcookie.LoggedIn(token)
+	cookie := authentication.LoggedIn(token)
 	http.SetCookie(w, &cookie)
 
 	log.Printf("User %s logged in via magic link", email)
@@ -91,7 +90,7 @@ func LoginGetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 }
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	cookie := authcookie.LoggedOut()
+	cookie := authentication.LoggedOut()
 	http.SetCookie(w, &cookie)
 
 	log.Println("User logged out")
