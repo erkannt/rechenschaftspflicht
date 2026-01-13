@@ -2,7 +2,8 @@ package main
 
 import (
 	"context"
-	"log"
+	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,38 +16,58 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-func main() {
-	database, err := database.InitDB()
-	if err != nil {
-		log.Fatalf("Could not init database: %v", err)
-	}
-	eventStore := eventstore.NewEventStore(database)
-	userStore := userstore.NewUserStore(database)
+func run(ctx context.Context, stdout io.Writer) error {
+	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
+	// Setup dependencies
+	db, err := database.InitDB()
+	if err != nil {
+		return fmt.Errorf("could not init database: %w", err)
+	}
+	eventStore := eventstore.NewEventStore(db)
+	userStore := userstore.NewUserStore(db)
+
+	// Create server
 	router := httprouter.New()
 	addRoutes(router, eventStore, userStore)
-
 	srv := &http.Server{Addr: ":8080", Handler: router}
 
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
-
+	// Start the server
+	serverErr := make(chan error, 1)
 	go func() {
-		<-quit
-		log.Println("Shutting down server...")
-
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-
-		if err := srv.Shutdown(ctx); err != nil {
-			log.Fatalf("Server forced to shutdown: %v", err)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			serverErr <- err
+		} else {
+			serverErr <- nil
 		}
 	}()
+	fmt.Fprintln(stdout, "Server is listening on :8080")
 
-	log.Println("Server is listening on :8080")
-	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatalf("ListenAndServe(): %v", err)
+	// Graceful shutdown
+	select {
+	case <-ctx.Done():
+		fmt.Fprintln(stdout, "Shutting down server...")
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(shutdownCtx); err != nil {
+			return fmt.Errorf("server forced to shutdown: %w", err)
+		}
+		fmt.Fprintln(stdout, "Server stopped")
+		return nil
+	case err := <-serverErr:
+		if err != nil {
+			return fmt.Errorf("listen and serve: %w", err)
+		}
+		fmt.Fprintln(stdout, "Server stopped")
+		return nil
 	}
+}
 
-	log.Println("Server stopped")
+func main() {
+	ctx := context.Background()
+	if err := run(ctx, os.Stdout); err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		os.Exit(1)
+	}
 }
