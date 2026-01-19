@@ -1,24 +1,25 @@
 package config
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/caarlos0/env/v11"
+)
 
 type Config struct {
-	JWTSecret string
-	SMTPHost  string
-	SMTPPort  string
-	SMTPUser  string
-	SMTPPass  string
-	SMTPFrom  string
+	JWTSecret string `env:"JWT_SECRET"`
+	SMTPHost  string `env:"SMTP_HOST"`
+	SMTPPort  string `env:"SMTP_PORT"`
+	SMTPUser  string `env:"SMTP_USER"`
+	SMTPPass  string `env:"SMTP_PASS"`
+	SMTPFrom  string `env:"SMTP_FROM"`
 }
 
 func LoadFromEnv(getenv func(string) string) (Config, error) {
-	cfg := Config{
-		JWTSecret: getenv("JWT_SECRET"),
-		SMTPHost:  getenv("SMTP_HOST"),
-		SMTPPort:  getenv("SMTP_PORT"),
-		SMTPUser:  getenv("SMTP_USER"),
-		SMTPPass:  getenv("SMTP_PASS"),
-		SMTPFrom:  getenv("SMTP_FROM"),
+	cfg := Config{}
+	err := env.Parse(&cfg)
+	if err != nil {
+		return Config{}, fmt.Errorf("failed to parse environment variables: %w", err)
 	}
 
 	if cfg.JWTSecret == "" {
