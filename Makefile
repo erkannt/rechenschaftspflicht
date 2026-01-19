@@ -1,6 +1,9 @@
 .PHONY: dev
-dev:
-	hivemind
+dev: .env
+	@set -a; . ./.env; set +a; hivemind
+
+.env:
+	cp .env.example .env
 
 .PHONY: prod
 prod: build-container

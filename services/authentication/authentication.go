@@ -35,23 +35,7 @@ type magicLinksSvc struct {
 	smtpAddr  string
 }
 
-// New creates a new MagicLinks service with the supplied configuration.
-// It derives sensible defaults from environment variables if fields are empty.
 func New(cfg config.Config) Auth {
-	// Apply defaults from environment if not provided.
-	if cfg.JWTSecret == "" {
-		cfg.JWTSecret = getEnv("JWT_SECRET", "default_secret")
-	}
-	if cfg.SMTPHost == "" {
-		cfg.SMTPHost = getEnv("SMTP_HOST", "localhost")
-	}
-	if cfg.SMTPPort == "" {
-		cfg.SMTPPort = getEnv("SMTP_PORT", "1025")
-	}
-	if cfg.SMTPFrom == "" {
-		cfg.SMTPFrom = getEnv("SMTP_FROM", "no-reply@example.com")
-	}
-
 	// Set up SMTP authentication only when a username is supplied.
 	var auth smtp.Auth
 	if cfg.SMTPUser != "" {
