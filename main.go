@@ -31,7 +31,12 @@ func run(
 	if err != nil {
 		return fmt.Errorf("could not init database: %w", err)
 	}
+
 	cfg, err := config.LoadFromEnv(getenv)
+	if err != nil {
+		return fmt.Errorf("could not load config from env: %w", err)
+	}
+
 	eventStore := eventstore.NewEventStore(db)
 	userStore := userstore.NewUserStore(db)
 	auth := authentication.New(cfg)
