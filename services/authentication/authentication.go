@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/erkannt/rechenschaftspflicht/services/config"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -26,16 +27,6 @@ type Auth interface {
 	GetLoggedInUserEmail(r *http.Request) (string, error)
 }
 
-// Config holds configuration required to create a MagicLinks service.
-type Config struct {
-	JWTSecret string
-	SMTPHost  string
-	SMTPPort  string
-	SMTPUser  string
-	SMTPPass  string
-	SMTPFrom  string
-}
-
 // magicLinksSvc is the concrete implementation holding internal state.
 type magicLinksSvc struct {
 	jwtSecret []byte
@@ -46,7 +37,7 @@ type magicLinksSvc struct {
 
 // New creates a new MagicLinks service with the supplied configuration.
 // It derives sensible defaults from environment variables if fields are empty.
-func New(cfg Config) Auth {
+func New(cfg config.Config) Auth {
 	// Apply defaults from environment if not provided.
 	if cfg.JWTSecret == "" {
 		cfg.JWTSecret = getEnv("JWT_SECRET", "default_secret")

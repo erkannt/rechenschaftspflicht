@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/erkannt/rechenschaftspflicht/services/authentication"
+	"github.com/erkannt/rechenschaftspflicht/services/config"
 	database "github.com/erkannt/rechenschaftspflicht/services/db"
 	"github.com/erkannt/rechenschaftspflicht/services/eventstore"
 	"github.com/erkannt/rechenschaftspflicht/services/userstore"
@@ -28,7 +29,7 @@ func run(ctx context.Context, stdout io.Writer) error {
 	}
 	eventStore := eventstore.NewEventStore(db)
 	userStore := userstore.NewUserStore(db)
-	auth := authentication.New(authentication.Config{})
+	auth := authentication.New(config.Config{})
 
 	// Create server
 	router := httprouter.New()
