@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -27,6 +28,8 @@ func run(
 	defer stop()
 
 	// Setup dependencies
+	logger := slog.New(slog.NewJSONHandler(stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+
 	db, err := database.InitDB()
 	if err != nil {
 		return fmt.Errorf("could not init database: %w", err)
@@ -55,24 +58,24 @@ func run(
 			serverErr <- nil
 		}
 	}()
-	fmt.Fprintln(stdout, "Server is listening on :8080")
+	logger.Info("Server is listening on :8080")
 
 	// Graceful shutdown
 	select {
 	case <-ctx.Done():
-		fmt.Fprintln(stdout, "Shutting down server...")
+		logger.Info("Shutting down server...")
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		if err := srv.Shutdown(shutdownCtx); err != nil {
 			return fmt.Errorf("server forced to shutdown: %w", err)
 		}
-		fmt.Fprintln(stdout, "Server stopped")
+		logger.Info("Server stopped")
 		return nil
 	case err := <-serverErr:
 		if err != nil {
 			return fmt.Errorf("listen and serve: %w", err)
 		}
-		fmt.Fprintln(stdout, "Server stopped")
+		logger.Info("Server stopped")
 		return nil
 	}
 }
