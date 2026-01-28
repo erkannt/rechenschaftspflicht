@@ -6,7 +6,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./data:/app/data
+      - ./src/data:/app/data
     depends_on:
       - mailpit
     restart: unless-stopped

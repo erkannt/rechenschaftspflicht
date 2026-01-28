@@ -1,11 +1,11 @@
 FROM golang:1.25-alpine AS builder
 
 WORKDIR /app
-COPY go.mod go.sum ./
+COPY src/go.mod src/go.sum ./
 RUN go mod download
 RUN apk add --no-cache build-base
 
-COPY . .
+COPY src ./
 RUN --mount=type=cache,target=/root/.cache/go-build \
     GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build -o main .
 
