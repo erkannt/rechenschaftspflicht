@@ -4,19 +4,11 @@ import (
 	"fmt"
 	"net/http"
 	"net/smtp"
-	"os"
 	"time"
 
 	"github.com/erkannt/rechenschaftspflicht/services/config"
 	"github.com/golang-jwt/jwt/v4"
 )
-
-func getEnv(key, fallback string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-	return fallback
-}
 
 // Auth defines the public contract for the service.
 type Auth interface {
