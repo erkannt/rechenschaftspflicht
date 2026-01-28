@@ -1,3 +1,4 @@
 tmp/
 data/
 *_templ.go
+.env
