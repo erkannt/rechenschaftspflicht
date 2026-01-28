@@ -1,6 +1,6 @@
 .PHONY: dev
 dev: .env
-	@set -a; . ./.env; set +a; hivemind
+	@set -o allexport; . ./.env; set +o allexport; hivemind
 
 .env:
 	cp .env.example .env
