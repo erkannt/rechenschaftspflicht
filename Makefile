@@ -12,3 +12,8 @@ prod: build-container
 .PHONY: build-container
 build-container:
 	docker build -t rechenschaftspflicht .
+
+.PHONY: check
+check:
+	cd src && go vet ./...
+	cd src && golangci-lint run ./...
