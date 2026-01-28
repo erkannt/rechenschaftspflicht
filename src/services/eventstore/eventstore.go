@@ -43,7 +43,12 @@ func (s *SQLiteEventStore) GetAll() ([]Event, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			err = closeErr
+		}
+	}()
 
 	var events []Event
 	for rows.Next() {
@@ -56,5 +61,6 @@ func (s *SQLiteEventStore) GetAll() ([]Event, error) {
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}
-	return events, nil
+
+	return events, err
 }
