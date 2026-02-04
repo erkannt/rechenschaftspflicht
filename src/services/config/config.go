@@ -7,15 +7,15 @@ import (
 )
 
 type Config struct {
-	JWTSecret string `env:"JWT_SECRET,notEmpty"`
-	SMTPHost  string `env:"SMTP_HOST,notEmpty"`
-	SMTPPort  string `env:"SMTP_PORT,notEmpty"`
+	JWTSecret string `env:"JWT_SECRET,notEmpty,required"`
+	SMTPHost  string `env:"SMTP_HOST,notEmpty,required"`
+	SMTPPort  string `env:"SMTP_PORT,notEmpty,required"`
 	SMTPUser  string `env:"SMTP_USER,required"`
 	SMTPPass  string `env:"SMTP_PASS,required"`
-	SMTPFrom  string `env:"SMTP_FROM,notEmpty"`
+	SMTPFrom  string `env:"SMTP_FROM,notEmpty,required"`
 }
 
-func LoadFromEnv(getenv func(string) string) (Config, error) {
+func LoadFromEnv() (Config, error) {
 	cfg := Config{}
 
 	err := env.Parse(&cfg)

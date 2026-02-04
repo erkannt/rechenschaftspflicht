@@ -21,7 +21,6 @@ import (
 
 func run(
 	ctx context.Context,
-	getenv func(string) string,
 	stdout io.Writer,
 ) error {
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
@@ -35,7 +34,7 @@ func run(
 		return fmt.Errorf("could not init database: %w", err)
 	}
 
-	cfg, err := config.LoadFromEnv(getenv)
+	cfg, err := config.LoadFromEnv()
 	if err != nil {
 		return fmt.Errorf("could not load config from env: %w", err)
 	}
@@ -82,7 +81,7 @@ func run(
 
 func main() {
 	ctx := context.Background()
-	if err := run(ctx, os.Getenv, os.Stdout); err != nil {
+	if err := run(ctx, os.Stdout); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}
