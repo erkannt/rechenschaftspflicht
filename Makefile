@@ -7,7 +7,7 @@ dev: .env
 
 .PHONY: prod
 prod: build-container
-	docker compose up
+	docker compose up --build
 
 .PHONY: build-container
 build-container:
