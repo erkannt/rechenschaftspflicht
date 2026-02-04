@@ -41,7 +41,7 @@ func run(
 
 	eventStore := eventstore.NewEventStore(db)
 	userStore := userstore.NewUserStore(db)
-	auth := authentication.New(cfg)
+	auth := authentication.New(logger, cfg)
 
 	// Create server
 	router := httprouter.New()

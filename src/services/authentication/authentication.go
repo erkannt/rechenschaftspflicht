@@ -2,6 +2,7 @@ package authentication
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/smtp"
 	"time"
@@ -27,24 +28,24 @@ type magicLinksSvc struct {
 	smtpAddr  string
 }
 
-func New(cfg config.Config) Auth {
-	// Set up SMTP authentication only when a username is supplied.
-	var auth smtp.Auth
-	if cfg.SMTPUser != "" {
-		auth = smtp.PlainAuth("", cfg.SMTPUser, cfg.SMTPPass, cfg.SMTPHost)
+func createSmtpAuth(logger *slog.Logger, cfg config.Config) smtp.Auth {
+	if cfg.SMTPUser == "" || cfg.SMTPUser == `""` {
+		logger.Warn("using SMTP without authentication as SMTPUSER is an empty string")
+		return nil
 	}
 
-	addr := fmt.Sprintf("%s:%s", cfg.SMTPHost, cfg.SMTPPort)
+	return smtp.PlainAuth("", cfg.SMTPUser, cfg.SMTPPass, cfg.SMTPHost)
+}
 
+func New(logger *slog.Logger, cfg config.Config) Auth {
 	return &magicLinksSvc{
 		jwtSecret: []byte(cfg.JWTSecret),
-		smtpAuth:  auth,
+		smtpAuth:  createSmtpAuth(logger, cfg),
 		smtpFrom:  cfg.SMTPFrom,
-		smtpAddr:  addr,
+		smtpAddr:  fmt.Sprintf("%s:%s", cfg.SMTPHost, cfg.SMTPPort),
 	}
 }
 
-// GenerateToken creates a JWT containing the email claim that expires in 15 minutes.
 func (s *magicLinksSvc) GenerateToken(email string) (string, error) {
 	claims := jwt.MapClaims{
 		"email": email,

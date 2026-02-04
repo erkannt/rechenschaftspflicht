@@ -5,6 +5,13 @@ services:
       - "8080:8080"
     volumes:
       - ./src/data:/app/data
+    environment:
+      - JWT_SECRET=not-a-secret
+      - SMTP_HOST=mailpit
+      - SMTP_PORT=1025
+      - SMTP_FROM=no-reply@example.com
+      - SMTP_USER=""
+      - SMTP_PASS=""
     depends_on:
       - mailpit
     restart: unless-stopped
