@@ -1,6 +1,8 @@
 package main
 
 import (
+	"embed"
+	"io/fs"
 	"net/http"
 
 	"github.com/erkannt/rechenschaftspflicht/handlers"
@@ -9,6 +11,19 @@ import (
 	"github.com/erkannt/rechenschaftspflicht/services/userstore"
 	"github.com/julienschmidt/httprouter"
 )
+
+//go:embed assets/* assets/**
+var embeddedAssets embed.FS
+
+var assetsFS http.FileSystem
+
+func init() {
+	sub, err := fs.Sub(embeddedAssets, "assets")
+	if err != nil {
+		panic(err)
+	}
+	assetsFS = http.FS(sub)
+}
 
 func mustBeLoggedIn(auth authentication.Auth) func(httprouter.Handle) httprouter.Handle {
 	return func(h httprouter.Handle) httprouter.Handle {
@@ -39,4 +54,7 @@ func addRoutes(
 	router.GET("/all-events", requireLogin(handlers.AllEventsHandler(eventStore)))
 	router.GET("/plots", requireLogin(handlers.PlotsHandler(eventStore)))
 	router.GET("/logout", requireLogin(handlers.LogoutHandler))
+
+	// Serve static assets from the embedded ./src/assets directory
+	router.Handler("GET", "/assets/*filepath", http.StripPrefix("/assets/", http.FileServer(assetsFS)))
 }
