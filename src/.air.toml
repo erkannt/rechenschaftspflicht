@@ -6,7 +6,6 @@ tmp_dir = "tmp"
 
 [build]
   args_bin = []
-  bin = "./tmp/main"
   cmd = "go tool templ generate && go build -o ./tmp/main ."
   delay = 1000
   entrypoint = ["./tmp/main"]
