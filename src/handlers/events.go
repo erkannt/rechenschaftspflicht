@@ -77,3 +77,21 @@ func AllEventsHandler(eventStore eventstore.EventStore) httprouter.Handle {
 		}
 	}
 }
+
+func PlotsHandler(eventStore eventstore.EventStore) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		events, err := eventStore.GetAll()
+		if err != nil {
+			fmt.Printf("failed to retrieve events: %v\n", err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		err = views.LayoutWithNav(views.Plots(events)).Render(r.Context(), w)
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			log.Printf("Error rendering layout: %v", err)
+			return
+		}
+	}
+}

@@ -1,0 +1,12 @@
+package views
+
+import "github.com/erkannt/rechenschaftspflicht/services/eventstore"
+
+templ Plots(events []eventstore.Event) {
+	<h1>Plots</h1>
+	if len(events) == 0 {
+		<p>No events have been recorded.</p>
+	} else {
+		<p>To be implemented</p>
+	}
+}
