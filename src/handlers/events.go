@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -73,6 +74,24 @@ func AllEventsHandler(eventStore eventstore.EventStore) httprouter.Handle {
 		if err != nil {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			log.Printf("Error rendering layout: %v", err)
+			return
+		}
+	}
+}
+
+func EventsJsonHandler(eventStore eventstore.EventStore) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		events, err := eventStore.GetAll()
+		if err != nil {
+			fmt.Printf("failed to retrieve events: %v\n", err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(events); err != nil {
+			fmt.Printf("failed to encode events to json: %v\n", err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
 	}
