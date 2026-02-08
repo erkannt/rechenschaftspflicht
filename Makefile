@@ -2,6 +2,11 @@
 dev: .env
 	@set -o allexport; . ./.env; set +o allexport; hivemind
 
+.PHONY: dummy-data
+dummy-data:
+	rm -rf src/data/state.db
+	python dummy-data-init.py
+
 .env:
 	cp .env.example .env
 
