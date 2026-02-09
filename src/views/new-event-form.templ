@@ -7,7 +7,7 @@ templ NewEventForm() {
 		<input type="text" id="tag" name="tag" required pattern="^[a-z][a-z-]*$"/>
 		<small>Used to group events. Can only contain a-z and hyphens.</small>
 		<label for="value">Value (optional):</label>
-		<input type="number" id="value" name="value"/>
+		<input type="number" id="value" name="value" step="any"/>
 		<small>Events with values can later be plotted.</small>
 		<label for="comment">Comment (optional):</label>
 		<textarea id="comment" name="comment"></textarea>
