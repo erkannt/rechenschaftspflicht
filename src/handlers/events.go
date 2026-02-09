@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/erkannt/rechenschaftspflicht/services/authentication"
@@ -12,6 +13,15 @@ import (
 	"github.com/erkannt/rechenschaftspflicht/views"
 	"github.com/julienschmidt/httprouter"
 )
+
+type EventResponse struct {
+	Tag        string  `json:"tag"`
+	Comment    string  `json:"comment"`
+	Value      string  `json:"value"`
+	ValueNum   float64 `json:"valueNum"`
+	RecordedAt string  `json:"recordedAt"`
+	RecordedBy string  `json:"recordedBy"`
+}
 
 func RecordEventFormHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	err := views.LayoutWithNav(views.NewEventForm()).Render(r.Context(), w)
@@ -88,8 +98,30 @@ func EventsJsonHandler(eventStore eventstore.EventStore) httprouter.Handle {
 			return
 		}
 
+		var eventResponses []EventResponse
+		for _, event := range events {
+			if event.Value == "" {
+				continue
+			}
+
+			valueNum, err := strconv.ParseFloat(event.Value, 64)
+			if err != nil {
+				continue
+			}
+
+			eventResponse := EventResponse{
+				Tag:        event.Tag,
+				Comment:    event.Comment,
+				Value:      event.Value,
+				ValueNum:   valueNum,
+				RecordedAt: event.RecordedAt,
+				RecordedBy: event.RecordedBy,
+			}
+			eventResponses = append(eventResponses, eventResponse)
+		}
+
 		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(events); err != nil {
+		if err := json.NewEncoder(w).Encode(eventResponses); err != nil {
 			fmt.Printf("failed to encode events to json: %v\n", err)
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
