@@ -13,6 +13,7 @@ type Config struct {
 	SMTPUser  string `env:"SMTP_USER,required"`
 	SMTPPass  string `env:"SMTP_PASS,required"`
 	SMTPFrom  string `env:"SMTP_FROM,notEmpty,required"`
+	AppOrigin string `env:"APP_ORIGIN,notEmpty,required"`
 }
 
 func LoadFromEnv() (Config, error) {
