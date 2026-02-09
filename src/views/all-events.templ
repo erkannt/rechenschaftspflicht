@@ -7,6 +7,7 @@ templ AllEvents(events []eventstore.Event) {
 	if len(events) == 0 {
 		<p>No events have been recorded.</p>
 	} else {
+		<a href="events.json">Download all events as JSON</a>
 		<ul>
 			for _, e := range events {
 				<li>
