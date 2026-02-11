@@ -28,3 +28,11 @@ check:
 fix:
 	cd src && go fmt ./...
 	cd src && go fix ./...
+
+.PHONY: test
+test:
+	cd src && go test ./...
+
+.PHONY: integration
+integration:
+	cd src && go test -tags=integration -run TestIntegrationHappyPath -v .

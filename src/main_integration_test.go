@@ -1,3 +1,5 @@
+//go:build integration
+
 package main
 
 import (
@@ -48,7 +50,7 @@ type mailpitMessageDetail struct {
 	Text string `json:"Text"`
 }
 
-func TestHappyPath(t *testing.T) {
+func TestIntegrationHappyPath(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
