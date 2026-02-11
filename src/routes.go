@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/erkannt/rechenschaftspflicht/handlers"
+	"github.com/erkannt/rechenschaftspflicht/middlewares"
 	"github.com/erkannt/rechenschaftspflicht/services/authentication"
 	"github.com/erkannt/rechenschaftspflicht/services/eventstore"
 	"github.com/erkannt/rechenschaftspflicht/services/userstore"
@@ -25,25 +26,13 @@ func init() {
 	assetsFS = http.FS(sub)
 }
 
-func mustBeLoggedIn(auth authentication.Auth) func(httprouter.Handle) httprouter.Handle {
-	return func(h httprouter.Handle) httprouter.Handle {
-		return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-			if !auth.IsLoggedIn(r) {
-				http.Redirect(w, r, "/login", http.StatusFound)
-				return
-			}
-			h(w, r, ps)
-		}
-	}
-}
-
 func addRoutes(
 	router *httprouter.Router,
 	eventStore eventstore.EventStore,
 	userStore userstore.UserStore,
 	auth authentication.Auth,
 ) {
-	requireLogin := mustBeLoggedIn(auth)
+	requireLogin := middlewares.MustBeLoggedIn(auth)
 
 	router.GET("/", handlers.LandingHandler(auth))
 	router.POST("/login", handlers.LoginPostHandler(userStore, auth))
