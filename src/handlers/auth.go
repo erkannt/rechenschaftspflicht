@@ -85,7 +85,7 @@ func LoginGetHandler(auth authentication.Auth) httprouter.Handle {
 			return
 		}
 
-		cookie := authentication.LoggedIn(token)
+		cookie := auth.LoggedIn(token)
 		http.SetCookie(w, &cookie)
 
 		log.Printf("User %s logged in via magic link", email)
@@ -93,12 +93,14 @@ func LoginGetHandler(auth authentication.Auth) httprouter.Handle {
 	}
 }
 
-func LogoutHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	cookie := authentication.LoggedOut()
-	http.SetCookie(w, &cookie)
+func LogoutHandler(auth authentication.Auth) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		cookie := auth.LoggedOut()
+		http.SetCookie(w, &cookie)
 
-	log.Println("User logged out")
-	http.Redirect(w, r, "/", http.StatusFound)
+		log.Println("User logged out")
+		http.Redirect(w, r, "/", http.StatusFound)
+	}
 }
 
 func CheckYourEmailHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {

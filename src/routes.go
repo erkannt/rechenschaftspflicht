@@ -54,7 +54,7 @@ func addRoutes(
 	router.GET("/all-events", requireLogin(handlers.AllEventsHandler(eventStore)))
 	router.GET("/events.json", requireLogin(handlers.EventsJsonHandler(eventStore)))
 	router.GET("/plots", requireLogin(handlers.PlotsHandler(eventStore)))
-	router.GET("/logout", requireLogin(handlers.LogoutHandler))
+	router.GET("/logout", requireLogin(handlers.LogoutHandler(auth)))
 
 	// Serve static assets from the embedded ./src/assets directory
 	router.Handler("GET", "/assets/*filepath", http.StripPrefix("/assets/", http.FileServer(assetsFS)))

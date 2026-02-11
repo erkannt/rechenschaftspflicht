@@ -18,6 +18,8 @@ type Auth interface {
 	SendMagicLink(toEmail, token string) error
 	IsLoggedIn(r *http.Request) bool
 	GetLoggedInUserEmail(r *http.Request) (string, error)
+	LoggedIn(token string) http.Cookie
+	LoggedOut() http.Cookie
 }
 
 // magicLinksSvc is the concrete implementation holding internal state.
@@ -26,6 +28,8 @@ type magicLinksSvc struct {
 	smtpAuth  smtp.Auth
 	smtpFrom  string
 	smtpAddr  string
+	appOrigin string
+	isHTTPS   bool
 }
 
 func createSmtpAuth(logger *slog.Logger, cfg config.Config) smtp.Auth {
@@ -43,7 +47,14 @@ func New(logger *slog.Logger, cfg config.Config) Auth {
 		smtpAuth:  createSmtpAuth(logger, cfg),
 		smtpFrom:  cfg.SMTPFrom,
 		smtpAddr:  fmt.Sprintf("%s:%s", cfg.SMTPHost, cfg.SMTPPort),
+		appOrigin: cfg.AppOrigin,
+		isHTTPS:   isHTTPS(cfg.AppOrigin),
 	}
+}
+
+// isHTTPS determines if the origin uses HTTPS protocol
+func isHTTPS(origin string) bool {
+	return len(origin) > 5 && origin[:5] == "https"
 }
 
 func (s *magicLinksSvc) GenerateToken(email string) (string, error) {
@@ -80,7 +91,7 @@ func (s *magicLinksSvc) SendMagicLink(toEmail, token string) error {
 		return fmt.Errorf("SMTP configuration incomplete: missing from address")
 	}
 
-	link := fmt.Sprintf("http://localhost:8080/login?token=%s", token)
+	link := fmt.Sprintf("%s/login?token=%s", s.appOrigin, token)
 	msg := fmt.Sprintf(
 		"From: %s\r\nSubject: Your Magic Login Link\r\n\r\nClick the following link to log in:\n\n%s",
 		s.smtpFrom,
@@ -116,18 +127,19 @@ func (s *magicLinksSvc) GetLoggedInUserEmail(r *http.Request) (string, error) {
 	return email, nil
 }
 
-func LoggedIn(token string) http.Cookie {
+func (s *magicLinksSvc) LoggedIn(token string) http.Cookie {
 	return http.Cookie{
 		Name:     "auth",
 		Value:    token,
 		Path:     "/",
 		Expires:  time.Now().Add(15 * time.Minute),
 		HttpOnly: true,
-		Secure:   false, // set true when using HTTPS
+		Secure:   s.isHTTPS,
+		SameSite: http.SameSiteLaxMode,
 	}
 }
 
-func LoggedOut() http.Cookie {
+func (s *magicLinksSvc) LoggedOut() http.Cookie {
 	return http.Cookie{
 		Name:     "auth",
 		Value:    "",
@@ -135,6 +147,7 @@ func LoggedOut() http.Cookie {
 		Expires:  time.Unix(0, 0), // Expire immediately
 		MaxAge:   -1,
 		HttpOnly: true,
-		Secure:   false, // set true when using HTTPS
+		Secure:   s.isHTTPS,
+		SameSite: http.SameSiteLaxMode,
 	}
 }
