@@ -15,6 +15,7 @@ import (
 	"github.com/erkannt/rechenschaftspflicht/services/config"
 	database "github.com/erkannt/rechenschaftspflicht/services/db"
 	"github.com/erkannt/rechenschaftspflicht/services/eventstore"
+	"github.com/erkannt/rechenschaftspflicht/services/security"
 	"github.com/erkannt/rechenschaftspflicht/services/userstore"
 	"github.com/julienschmidt/httprouter"
 )
@@ -46,7 +47,11 @@ func run(
 	// Create server
 	router := httprouter.New()
 	addRoutes(router, eventStore, userStore, auth)
-	srv := &http.Server{Addr: ":8080", Handler: router}
+
+	// Apply security middleware
+	handlerWithSecurity := security.SecurityHeaders(router)
+
+	srv := &http.Server{Addr: ":8080", Handler: handlerWithSecurity}
 
 	// Start the server
 	serverErr := make(chan error, 1)
