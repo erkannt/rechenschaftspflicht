@@ -17,6 +17,8 @@ This is a Go web application called "Rechenschaftspflicht" that uses:
 
 IMPORTANT: prefix all shell commands with `PATH=$PATH:~/mise/shims` so that dependencies are available.
 
+Don't make commits. The human will commit changes.
+
 ### Development
 
 ```bash
@@ -37,7 +39,6 @@ make build-container       # Build Docker image
 make check                 # Run go build, go vet, and golangci-lint
 make fix                   # Auto-format and fix code (go fmt, go fix)
 ```
-
 
 ## Code Style Guidelines
 
