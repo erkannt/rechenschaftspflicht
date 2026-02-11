@@ -23,6 +23,7 @@ import (
 func run(
 	ctx context.Context,
 	stdout io.Writer,
+	getenv func(string) string,
 ) error {
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -30,7 +31,7 @@ func run(
 	// Setup dependencies
 	logger := slog.New(slog.NewJSONHandler(stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
 
-	cfg, err := config.LoadFromEnv()
+	cfg, err := config.LoadFromEnv(getenv)
 	if err != nil {
 		return fmt.Errorf("could not load config from env: %w", err)
 	}
@@ -84,7 +85,7 @@ func run(
 
 func main() {
 	ctx := context.Background()
-	if err := run(ctx, os.Stdout); err != nil {
+	if err := run(ctx, os.Stdout, os.Getenv); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}

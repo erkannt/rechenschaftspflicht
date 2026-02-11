@@ -18,13 +18,35 @@ type Config struct {
 	SqlitePath  string `env:"SQLITE_PATH" envDefault:"data/state.db"`
 }
 
-func LoadFromEnv() (Config, error) {
+func LoadFromEnv(getenv func(string) string) (Config, error) {
 	cfg := Config{}
 
-	err := env.Parse(&cfg)
+	opts := env.Options{
+		Environment: buildEnvMap(getenv),
+	}
+
+	err := env.ParseWithOptions(&cfg, opts)
 	if err != nil {
 		return Config{}, fmt.Errorf("failed to parse environment variables: %w", err)
 	}
 
 	return cfg, nil
+}
+
+func buildEnvMap(getenv func(string) string) map[string]string {
+	envMap := make(map[string]string)
+	for _, key := range []string{
+		"JWT_SECRET",
+		"BEARER_TOKEN",
+		"SMTP_HOST",
+		"SMTP_PORT",
+		"SMTP_USER",
+		"SMTP_PASS",
+		"SMTP_FROM",
+		"APP_ORIGIN",
+		"SQLITE_PATH",
+	} {
+		envMap[key] = getenv(key)
+	}
+	return envMap
 }
