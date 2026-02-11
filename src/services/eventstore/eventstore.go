@@ -38,7 +38,7 @@ func (s *SQLiteEventStore) GetAll() ([]Event, error) {
 		SELECT e.tag, e.comment, e.value, e.recordedAt, u.username
 		FROM events e
 		LEFT JOIN users u ON e.recordedBy = u.email
-		ORDER BY e.recordedAt DESC;
+		ORDER BY e.sequence DESC;
 	`)
 	if err != nil {
 		return nil, err

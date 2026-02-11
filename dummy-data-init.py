@@ -44,7 +44,7 @@ def main():
     """)
     cur.execute("""
         CREATE TABLE IF NOT EXISTS events (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            sequence INTEGER PRIMARY KEY AUTOINCREMENT,
             tag TEXT,
             comment TEXT,
             value TEXT,

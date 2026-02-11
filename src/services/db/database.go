@@ -20,7 +20,7 @@ func InitDB(config config.Config) (*sql.DB, error) {
 
 	createEventsTable := `
 	CREATE TABLE IF NOT EXISTS events (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		sequence INTEGER PRIMARY KEY AUTOINCREMENT,
 		tag TEXT,
 		comment TEXT,
 		value TEXT,
