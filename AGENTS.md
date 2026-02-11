@@ -15,7 +15,7 @@ This is a Go web application called "Rechenschaftspflicht" that uses:
 
 ## Build/Development Commands
 
-Make sure that `~/mise/shims` is part of `PATH` envvar before running any commands.
+IMPORTANT: prefix all shell commands with `PATH=$PATH:~/mise/shims` so that dependencies are available.
 
 ### Development
 
@@ -36,18 +36,8 @@ make build-container       # Build Docker image
 ```bash
 make check                 # Run go build, go vet, and golangci-lint
 make fix                   # Auto-format and fix code (go fmt, go fix)
-cd src && go build ./...   # Build all packages
-cd src && go vet ./...     # Run static analysis
-cd src && golangci-lint run ./...  # Run comprehensive linting
 ```
 
-### Testing
-
-```bash
-# No test framework currently configured - tests would use Go's built-in testing
-cd src && go test ./...    # Run all tests (when available)
-cd src && go test -run TestSpecific ./package  # Run specific test
-```
 
 ## Code Style Guidelines
 
@@ -170,9 +160,10 @@ func (s *SQLiteEventStore) GetAll() ([]Event, error) {
 
 ### Environment Configuration
 
+- `Config` struct in config service documents the configuration
 - Use `.env` file for development (copy from `.env.example`)
 - Configuration loaded via `github.com/caarlos0/env/v11`
-- Environment variables documented in `docker-compose.yaml`
+- Environment variables need to be kept up to date in `docker-compose.yaml`
 
 ### Security
 
