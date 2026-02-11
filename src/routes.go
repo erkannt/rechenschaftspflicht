@@ -2,8 +2,6 @@ package main
 
 import (
 	"embed"
-	"io/fs"
-	"net/http"
 
 	"github.com/erkannt/rechenschaftspflicht/handlers"
 	"github.com/erkannt/rechenschaftspflicht/middlewares"
@@ -15,16 +13,6 @@ import (
 
 //go:embed assets/* assets/**
 var embeddedAssets embed.FS
-
-var assetsFS http.FileSystem
-
-func init() {
-	sub, err := fs.Sub(embeddedAssets, "assets")
-	if err != nil {
-		panic(err)
-	}
-	assetsFS = http.FS(sub)
-}
 
 func addRoutes(
 	router *httprouter.Router,
@@ -45,6 +33,5 @@ func addRoutes(
 	router.GET("/plots", requireLogin(handlers.PlotsHandler(eventStore)))
 	router.GET("/logout", requireLogin(handlers.LogoutHandler(auth)))
 
-	// Serve static assets from the embedded ./src/assets directory
-	router.Handler("GET", "/assets/*filepath", http.StripPrefix("/assets/", http.FileServer(assetsFS)))
+	router.GET("/assets/*filepath", handlers.AssetsHandler(embeddedAssets))
 }
