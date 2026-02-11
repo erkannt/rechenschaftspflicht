@@ -18,6 +18,7 @@ import (
 	"github.com/erkannt/rechenschaftspflicht/services/eventstore"
 	"github.com/erkannt/rechenschaftspflicht/services/userstore"
 	"github.com/julienschmidt/httprouter"
+	sloghttp "github.com/samber/slog-http"
 )
 
 func run(
@@ -48,9 +49,10 @@ func run(
 	// Create server
 	router := httprouter.New()
 	addRoutes(router, cfg, eventStore, userStore, auth)
-	handlerWithSecurity := middlewares.SecurityHeaders(router)
+	requestLogging := sloghttp.New(logger)
+	handlerWithMiddlewares := middlewares.SecurityHeaders(requestLogging(router))
 
-	srv := &http.Server{Addr: ":8080", Handler: handlerWithSecurity}
+	srv := &http.Server{Addr: ":8080", Handler: handlerWithMiddlewares}
 
 	// Start the server
 	serverErr := make(chan error, 1)
