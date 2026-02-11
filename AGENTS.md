@@ -17,27 +17,22 @@ This is a Go web application called "Rechenschaftspflicht" that uses:
 
 IMPORTANT: prefix all shell commands with `PATH=$PATH:~/mise/shims` so that dependencies are available.
 
+All make commands must be run from the repository root (same directory as the Makefile), not from inside `src/`.
+
 Don't make commits. The human will commit changes.
 
-### Development
+Do not run the following make targets:
 
-```bash
-make dev                    # Start development server with hivemind
-make dummy-data            # Reset database and populate with dummy data
-```
+- dev
+- dummy-data
+- integration
 
-### Building & Deployment
-
-```bash
-make prod                  # Build and run with Docker Compose
-make build-container       # Build Docker image
-```
-
-### Code Quality & Testing
+### Validating changes
 
 ```bash
 make check                 # Run go build, go vet, and golangci-lint
 make fix                   # Auto-format and fix code (go fmt, go fix)
+make test                  # Run unit tests
 ```
 
 ## Code Style Guidelines
@@ -163,7 +158,7 @@ func (s *SQLiteEventStore) GetAll() ([]Event, error) {
 
 - `Config` struct in config service documents the configuration
 - Use `.env` file for development (copy from `.env.example`)
-- Configuration loaded via `github.com/caarlos0/env/v11`
+- Configuration loaded via custom reflection-based parser in `src/services/config/env/`
 - Environment variables need to be kept up to date in `docker-compose.yaml`
 
 ### Security
