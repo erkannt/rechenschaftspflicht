@@ -12,7 +12,7 @@ func SecurityHeaders(next http.Handler) http.Handler {
 		w.Header().Set("Content-Security-Policy",
 			"default-src 'self'; "+
 				"style-src 'self' https://unpkg.com; "+
-				"script-src 'self'; "+
+				"script-src 'self' https://cdn.jsdelivr.net; "+
 				"img-src 'self'; "+
 				"font-src 'self'; "+
 				"connect-src 'self'; "+
@@ -31,11 +31,6 @@ func SecurityHeaders(next http.Handler) http.Handler {
 
 		// Referrer Policy
 		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
-
-		// Content Type for all responses to prevent content type attacks
-		if w.Header().Get("Content-Type") == "" {
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		}
 
 		next.ServeHTTP(w, r)
 	})
