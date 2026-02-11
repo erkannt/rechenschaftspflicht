@@ -6,6 +6,7 @@ import (
 	"github.com/erkannt/rechenschaftspflicht/handlers"
 	"github.com/erkannt/rechenschaftspflicht/middlewares"
 	"github.com/erkannt/rechenschaftspflicht/services/authentication"
+	"github.com/erkannt/rechenschaftspflicht/services/config"
 	"github.com/erkannt/rechenschaftspflicht/services/eventstore"
 	"github.com/erkannt/rechenschaftspflicht/services/userstore"
 	"github.com/julienschmidt/httprouter"
@@ -16,11 +17,13 @@ var embeddedAssets embed.FS
 
 func addRoutes(
 	router *httprouter.Router,
+	cfg config.Config,
 	eventStore eventstore.EventStore,
 	userStore userstore.UserStore,
 	auth authentication.Auth,
 ) {
 	requireLogin := middlewares.MustBeLoggedIn(auth)
+	requireBearerToken := middlewares.RequireBearerToken(cfg.BearerToken)
 
 	router.GET("/", handlers.LandingHandler(auth))
 	router.POST("/login", handlers.LoginPostHandler(userStore, auth))
@@ -32,6 +35,7 @@ func addRoutes(
 	router.GET("/events.json", requireLogin(handlers.EventsJsonHandler(eventStore)))
 	router.GET("/plots", requireLogin(handlers.PlotsHandler(eventStore)))
 	router.GET("/logout", requireLogin(handlers.LogoutHandler(auth)))
+	router.POST("/add-user", requireBearerToken(handlers.AddUserHandler(userStore)))
 
 	router.GET("/assets/*filepath", handlers.AssetsHandler(embeddedAssets))
 }

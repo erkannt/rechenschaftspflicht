@@ -46,7 +46,7 @@ func run(
 
 	// Create server
 	router := httprouter.New()
-	addRoutes(router, eventStore, userStore, auth)
+	addRoutes(router, cfg, eventStore, userStore, auth)
 	handlerWithSecurity := middlewares.SecurityHeaders(router)
 
 	srv := &http.Server{Addr: ":8080", Handler: handlerWithSecurity}

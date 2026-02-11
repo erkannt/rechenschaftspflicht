@@ -6,6 +6,7 @@ import (
 
 type UserStore interface {
 	IsUser(email string) (bool, error)
+	AddUser(email string, username string) error
 }
 
 type SQLiteUserStore struct {
@@ -28,4 +29,14 @@ func (s *SQLiteUserStore) IsUser(email string) (bool, error) {
 		return false, err
 	}
 	return count > 0, nil
+}
+
+func (s *SQLiteUserStore) AddUser(email string, username string) error {
+	const query = `
+		INSERT INTO users (email, username)
+		VALUES (LOWER(?), ?);
+	`
+
+	_, err := s.db.Exec(query, email, username)
+	return err
 }

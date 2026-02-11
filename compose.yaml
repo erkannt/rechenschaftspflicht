@@ -7,6 +7,7 @@ services:
       - ./src/data:/app/data
     environment:
       - JWT_SECRET=not-a-secret
+      - BEARER_TOKEN=secret
       - SMTP_HOST=mailpit
       - SMTP_PORT=1025
       - SMTP_FROM=no-reply@example.com
