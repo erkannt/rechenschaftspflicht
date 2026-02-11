@@ -3,18 +3,17 @@ package database
 import (
 	"database/sql"
 	"os"
-	"path/filepath"
 
+	"github.com/erkannt/rechenschaftspflicht/services/config"
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func InitDB() (*sql.DB, error) {
+func InitDB(config config.Config) (*sql.DB, error) {
 	if err := os.MkdirAll("data", os.ModePerm); err != nil {
 		return nil, err
 	}
 
-	dbPath := filepath.Join("data", "state.db")
-	db, err := sql.Open("sqlite3", dbPath)
+	db, err := sql.Open("sqlite3", config.SqlitePath)
 	if err != nil {
 		return nil, err
 	}

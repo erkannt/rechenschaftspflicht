@@ -30,14 +30,14 @@ func run(
 	// Setup dependencies
 	logger := slog.New(slog.NewJSONHandler(stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
 
-	db, err := database.InitDB()
-	if err != nil {
-		return fmt.Errorf("could not init database: %w", err)
-	}
-
 	cfg, err := config.LoadFromEnv()
 	if err != nil {
 		return fmt.Errorf("could not load config from env: %w", err)
+	}
+
+	db, err := database.InitDB(cfg)
+	if err != nil {
+		return fmt.Errorf("could not init database: %w", err)
 	}
 
 	eventStore := eventstore.NewEventStore(db)
