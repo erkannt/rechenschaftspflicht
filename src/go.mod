@@ -9,10 +9,10 @@ tool (
 
 require (
 	github.com/a-h/templ v0.3.960
-	github.com/caarlos0/env/v11 v11.3.1
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/mattn/go-sqlite3 v1.14.33
+	github.com/samber/slog-http v1.11.1
 	github.com/testcontainers/testcontainers-go v0.35.0
 )
 
@@ -65,7 +65,6 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
-	github.com/samber/slog-http v1.11.1 // indirect
 	github.com/shirou/gopsutil/v3 v3.23.12 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
