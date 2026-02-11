@@ -11,11 +11,11 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/erkannt/rechenschaftspflicht/middlewares"
 	"github.com/erkannt/rechenschaftspflicht/services/authentication"
 	"github.com/erkannt/rechenschaftspflicht/services/config"
 	database "github.com/erkannt/rechenschaftspflicht/services/db"
 	"github.com/erkannt/rechenschaftspflicht/services/eventstore"
-	"github.com/erkannt/rechenschaftspflicht/services/security"
 	"github.com/erkannt/rechenschaftspflicht/services/userstore"
 	"github.com/julienschmidt/httprouter"
 )
@@ -47,9 +47,7 @@ func run(
 	// Create server
 	router := httprouter.New()
 	addRoutes(router, eventStore, userStore, auth)
-
-	// Apply security middleware
-	handlerWithSecurity := security.SecurityHeaders(router)
+	handlerWithSecurity := middlewares.SecurityHeaders(router)
 
 	srv := &http.Server{Addr: ":8080", Handler: handlerWithSecurity}
 
