@@ -18,6 +18,7 @@ import (
 	"github.com/erkannt/rechenschaftspflicht/services/eventstore"
 	"github.com/erkannt/rechenschaftspflicht/services/userstore"
 	"github.com/julienschmidt/httprouter"
+	"github.com/lmittmann/tint"
 	sloghttp "github.com/samber/slog-http"
 )
 
@@ -30,7 +31,7 @@ func run(
 	defer stop()
 
 	// Setup dependencies
-	logger := slog.New(slog.NewJSONHandler(stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	logger := buildLogger(stdout, slog.LevelDebug)
 
 	cfg, err := config.LoadFromEnv(getenv)
 	if err != nil {
@@ -83,6 +84,16 @@ func run(
 		logger.Info("Server stopped")
 		return nil
 	}
+}
+
+func buildLogger(stdout io.Writer, level slog.Leveler) *slog.Logger {
+	if os.Getenv("LOG_FORMAT") == "text" {
+		return slog.New(tint.NewHandler(stdout, &tint.Options{
+			Level:      level,
+			TimeFormat: "15:04:05",
+		}))
+	}
+	return slog.New(slog.NewJSONHandler(stdout, &slog.HandlerOptions{Level: level}))
 }
 
 func main() {

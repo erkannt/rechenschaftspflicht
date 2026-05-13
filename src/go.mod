@@ -11,6 +11,7 @@ require (
 	github.com/a-h/templ v0.3.960
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/julienschmidt/httprouter v1.3.0
+	github.com/lmittmann/tint v1.1.3
 	github.com/mattn/go-sqlite3 v1.14.33
 	github.com/samber/slog-http v1.11.1
 	github.com/testcontainers/testcontainers-go v0.35.0
