@@ -23,12 +23,21 @@ type EventResponse struct {
 	RecordedBy string  `json:"recordedBy"`
 }
 
-func RecordEventFormHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	err := views.LayoutWithNav(views.NewEventForm()).Render(r.Context(), w)
-	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		log.Printf("Error rendering layout: %v", err)
-		return
+func RecordEventFormHandler(eventStore eventstore.EventStore) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		tags, err := eventStore.GetAllTags()
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			log.Printf("Error retrieving tags: %v", err)
+			return
+		}
+
+		err = views.LayoutWithNav(views.NewEventForm(tags)).Render(r.Context(), w)
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			log.Printf("Error rendering layout: %v", err)
+			return
+		}
 	}
 }
 
@@ -62,7 +71,12 @@ func RecordEventPostHandler(eventStore eventstore.EventStore, auth authenticatio
 
 		fmt.Printf("Received: %+v\n", event)
 
-		err := views.LayoutWithNav(views.NewEventFormWithSuccessBanner()).Render(r.Context(), w)
+		tags, err := eventStore.GetAllTags()
+		if err != nil {
+			log.Printf("Error retrieving tags: %v", err)
+		}
+
+		err = views.LayoutWithNav(views.NewEventFormWithSuccessBanner(tags)).Render(r.Context(), w)
 		if err != nil {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			log.Printf("Error rendering layout: %v", err)

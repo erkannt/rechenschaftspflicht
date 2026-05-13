@@ -29,7 +29,7 @@ func addRoutes(
 	router.POST("/login", handlers.LoginPostHandler(userStore, auth))
 	router.GET("/login", handlers.LoginGetHandler(auth))
 	router.GET("/check-your-email", handlers.CheckYourEmailHandler)
-	router.GET("/record-event", requireLogin(handlers.RecordEventFormHandler))
+	router.GET("/record-event", requireLogin(handlers.RecordEventFormHandler(eventStore)))
 	router.POST("/record-event", requireLogin(handlers.RecordEventPostHandler(eventStore, auth)))
 	router.GET("/all-events", requireLogin(handlers.AllEventsHandler(eventStore)))
 	router.GET("/events.json", requireLogin(handlers.EventsJsonHandler(eventStore)))
