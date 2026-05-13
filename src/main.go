@@ -48,7 +48,7 @@ func run(
 
 	// Create server
 	router := httprouter.New()
-	addRoutes(router, cfg, eventStore, userStore, auth)
+	addRoutes(router, logger, cfg, eventStore, userStore, auth)
 	requestLogging := sloghttp.New(logger)
 	handlerWithMiddlewares := middlewares.TemplCSSWithNonce(middlewares.SecurityHeaders(requestLogging(router)))
 

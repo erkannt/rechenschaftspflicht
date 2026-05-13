@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"log/slog"
 
 	"github.com/erkannt/rechenschaftspflicht/handlers"
 	"github.com/erkannt/rechenschaftspflicht/middlewares"
@@ -17,6 +18,7 @@ var embeddedAssets embed.FS
 
 func addRoutes(
 	router *httprouter.Router,
+	logger *slog.Logger,
 	cfg config.Config,
 	eventStore eventstore.EventStore,
 	userStore userstore.UserStore,
@@ -29,11 +31,11 @@ func addRoutes(
 	router.POST("/login", handlers.LoginPostHandler(userStore, auth))
 	router.GET("/login", handlers.LoginGetHandler(auth))
 	router.GET("/check-your-email", handlers.CheckYourEmailHandler)
-	router.GET("/record-event", requireLogin(handlers.RecordEventFormHandler(eventStore)))
-	router.POST("/record-event", requireLogin(handlers.RecordEventPostHandler(eventStore, auth)))
-	router.GET("/all-events", requireLogin(handlers.AllEventsHandler(eventStore)))
-	router.GET("/events.json", requireLogin(handlers.EventsJsonHandler(eventStore)))
-	router.GET("/plots", requireLogin(handlers.PlotsHandler(eventStore)))
+	router.GET("/record-event", requireLogin(handlers.RecordEventFormHandler(eventStore, logger)))
+	router.POST("/record-event", requireLogin(handlers.RecordEventPostHandler(eventStore, auth, logger)))
+	router.GET("/all-events", requireLogin(handlers.AllEventsHandler(eventStore, logger)))
+	router.GET("/events.json", requireLogin(handlers.EventsJsonHandler(eventStore, logger)))
+	router.GET("/plots", requireLogin(handlers.PlotsHandler(eventStore, logger)))
 	router.GET("/logout", requireLogin(handlers.LogoutHandler(auth)))
 	router.GET("/oops", handlers.OopsHandler)
 	router.POST("/add-user", requireBearerToken(handlers.AddUserHandler(userStore)))

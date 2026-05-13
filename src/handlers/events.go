@@ -2,8 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
@@ -23,25 +22,25 @@ type EventResponse struct {
 	RecordedBy string  `json:"recordedBy"`
 }
 
-func RecordEventFormHandler(eventStore eventstore.EventStore) httprouter.Handle {
+func RecordEventFormHandler(eventStore eventstore.EventStore, logger *slog.Logger) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		tags, err := eventStore.GetAllTags()
 		if err != nil {
+			logger.ErrorContext(r.Context(), "failed to retrieve tags", slog.Any("error", err))
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			log.Printf("Error retrieving tags: %v", err)
 			return
 		}
 
 		err = views.LayoutWithNav(views.NewEventForm(tags)).Render(r.Context(), w)
 		if err != nil {
+			logger.ErrorContext(r.Context(), "failed to render event form", slog.Any("error", err))
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			log.Printf("Error rendering layout: %v", err)
 			return
 		}
 	}
 }
 
-func RecordEventPostHandler(eventStore eventstore.EventStore, auth authentication.Auth) httprouter.Handle {
+func RecordEventPostHandler(eventStore eventstore.EventStore, auth authentication.Auth, logger *slog.Logger) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "invalid form data", http.StatusBadRequest)
@@ -64,50 +63,53 @@ func RecordEventPostHandler(eventStore eventstore.EventStore, auth authenticatio
 		}
 
 		if err := eventStore.Record(event); err != nil {
-			fmt.Printf("failed to record event: %v\n", err)
+			logger.ErrorContext(r.Context(), "failed to record event", slog.Any("error", err))
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
 
-		fmt.Printf("Received: %+v\n", event)
+		logger.DebugContext(r.Context(), "event recorded",
+			slog.String("tag", event.Tag),
+			slog.String("recordedBy", event.RecordedBy),
+		)
 
 		tags, err := eventStore.GetAllTags()
 		if err != nil {
-			log.Printf("Error retrieving tags: %v", err)
+			logger.ErrorContext(r.Context(), "failed to retrieve tags for success form", slog.Any("error", err))
 		}
 
 		err = views.LayoutWithNav(views.NewEventFormWithSuccessBanner(tags)).Render(r.Context(), w)
 		if err != nil {
+			logger.ErrorContext(r.Context(), "failed to render success form", slog.Any("error", err))
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			log.Printf("Error rendering layout: %v", err)
 			return
 		}
 	}
 }
 
-func AllEventsHandler(eventStore eventstore.EventStore) httprouter.Handle {
+func AllEventsHandler(eventStore eventstore.EventStore, logger *slog.Logger) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		events, err := eventStore.GetAll()
 		if err != nil {
-			fmt.Printf("failed to retrieve events: %v\n", err)
+			logger.ErrorContext(r.Context(), "failed to retrieve events", slog.Any("error", err))
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
 
 		err = views.LayoutWithNav(views.AllEvents(events)).Render(r.Context(), w)
 		if err != nil {
+			logger.ErrorContext(r.Context(), "failed to render all events", slog.Any("error", err))
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			log.Printf("Error rendering layout: %v", err)
 			return
 		}
 	}
 }
 
-func EventsJsonHandler(eventStore eventstore.EventStore) httprouter.Handle {
+func EventsJsonHandler(eventStore eventstore.EventStore, logger *slog.Logger) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		events, err := eventStore.GetAll()
 		if err != nil {
-			fmt.Printf("failed to retrieve events: %v\n", err)
+			logger.ErrorContext(r.Context(), "failed to retrieve events", slog.Any("error", err))
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
@@ -136,25 +138,25 @@ func EventsJsonHandler(eventStore eventstore.EventStore) httprouter.Handle {
 
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(eventResponses); err != nil {
-			fmt.Printf("failed to encode events to json: %v\n", err)
+			logger.ErrorContext(r.Context(), "failed to encode events to JSON", slog.Any("error", err))
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
 	}
 }
 
-func PlotsHandler(eventStore eventstore.EventStore) httprouter.Handle {
+func PlotsHandler(eventStore eventstore.EventStore, logger *slog.Logger) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		events, err := eventStore.GetAll()
 		if err != nil {
+			logger.ErrorContext(r.Context(), "failed to retrieve events for plots", slog.Any("error", err))
 			http.Error(w, "Failed to retrieve events", http.StatusInternalServerError)
-			log.Printf("Error retrieving events from event store: %v", err)
 			return
 		}
 		err = views.LayoutWithNav(views.Plots(events)).Render(r.Context(), w)
 		if err != nil {
+			logger.ErrorContext(r.Context(), "failed to render plots", slog.Any("error", err))
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			log.Printf("Error rendering layout: %v", err)
 			return
 		}
 	}
