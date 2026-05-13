@@ -28,6 +28,10 @@ release: build-container
 	yq -i '.services.rechenschaftspflicht.image = "rknt/rechenschaftspflicht:$(LOCAL_TRUNK_VER)"' /home/hff/repos/rknt-server/rechenschaftspflicht/docker-compose.yml
 	cd /home/hff/repos/rknt-server && git add rechenschaftspflicht/docker-compose.yml && git commit -m "bump rechenschaftspflicht image version" && git push
 
+.PHONY: generate
+generate:
+	cd src && go run github.com/a-h/templ/cmd/templ generate
+
 .PHONY: check
 check: test
 	cd src && CGO_ENABLED=1 go build ./...

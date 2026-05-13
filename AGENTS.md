@@ -33,6 +33,7 @@ Do not run the following make targets:
 make check                 # Run go build, go vet, and golangci-lint
 make fix                   # Auto-format and fix code (go fmt, go fix)
 make test                  # Run unit tests
+make generate              # generate go code from templ files to manually check if templ file works as expected
 ```
 
 ## Code Style Guidelines
