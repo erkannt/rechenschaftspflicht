@@ -17,6 +17,7 @@ type Event struct {
 type EventStore interface {
 	Record(event Event) error
 	GetAll() ([]Event, error)
+	GetAllTags() ([]string, error)
 }
 
 type SQLiteEventStore struct {
@@ -63,4 +64,30 @@ func (s *SQLiteEventStore) GetAll() ([]Event, error) {
 	}
 
 	return events, err
+}
+
+func (s *SQLiteEventStore) GetAllTags() ([]string, error) {
+	rows, err := s.db.Query(`SELECT DISTINCT tag FROM events ORDER BY tag;`)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			err = closeErr
+		}
+	}()
+
+	var tags []string
+	for rows.Next() {
+		var tag string
+		if err := rows.Scan(&tag); err != nil {
+			return nil, err
+		}
+		tags = append(tags, tag)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return tags, nil
 }
