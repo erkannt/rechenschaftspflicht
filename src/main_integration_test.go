@@ -290,7 +290,114 @@ func TestIntegrationHappyPath(t *testing.T) {
 		t.Logf("events.json contains %d events", len(events))
 	})
 
-	// Step 6: Check plots.js asset is accessible
+	// Step 6: Mark second event as incorrect
+	t.Run("mark event as incorrect", func(t *testing.T) {
+		// First, get the events to find the sequence number of the second event
+		resp, err := client.Get(fmt.Sprintf("http://%s/events.json", serverAddr))
+		if err != nil {
+			t.Fatalf("failed to get events.json: %v", err)
+		}
+		defer func() { _ = resp.Body.Close() }()
+
+		var events []eventstore.Event
+		if err := json.NewDecoder(resp.Body).Decode(&events); err != nil {
+			t.Fatalf("failed to decode events: %v", err)
+		}
+
+		// Find the second event (test-tag-2)
+		var targetSequence int
+		for _, e := range events {
+			if e.Tag == "test-tag-2" {
+				targetSequence = e.Sequence
+				break
+			}
+		}
+
+		if targetSequence == 0 {
+			t.Fatal("could not find test-tag-2 event")
+		}
+
+		// Mark it as incorrect
+		formData := url.Values{}
+		formData.Set("sequence", fmt.Sprintf("%d", targetSequence))
+
+		resp, err = client.PostForm(fmt.Sprintf("http://%s/mark-event-incorrect", serverAddr), formData)
+		if err != nil {
+			t.Fatalf("failed to mark event as incorrect: %v", err)
+		}
+		defer func() { _ = resp.Body.Close() }()
+
+		if resp.StatusCode != http.StatusSeeOther {
+			t.Fatalf("expected 303 redirect, got %d", resp.StatusCode)
+		}
+
+		t.Logf("Event %d marked as incorrect", targetSequence)
+	})
+
+	// Step 7: Verify marked event is excluded from all-events
+	t.Run("verify event excluded from all-events", func(t *testing.T) {
+		resp, err := client.Get(fmt.Sprintf("http://%s/all-events", serverAddr))
+		if err != nil {
+			t.Fatalf("failed to get all-events: %v", err)
+		}
+		defer func() { _ = resp.Body.Close() }()
+
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("expected 200, got %d", resp.StatusCode)
+		}
+
+		body, _ := io.ReadAll(resp.Body)
+		content := string(body)
+
+		// Second event should be gone
+		if strings.Contains(content, "Second test event") {
+			t.Error("marked event should be excluded from all-events page")
+		}
+
+		// Other events should still be there
+		if !strings.Contains(content, "First test event") {
+			t.Error("First test event should still be visible")
+		}
+		if !strings.Contains(content, "Third test event") {
+			t.Error("Third test event should still be visible")
+		}
+
+		t.Log("Marked event correctly excluded from all-events")
+	})
+
+	// Step 8: Verify marked event is excluded from events.json
+	t.Run("verify event excluded from events.json", func(t *testing.T) {
+		resp, err := client.Get(fmt.Sprintf("http://%s/events.json", serverAddr))
+		if err != nil {
+			t.Fatalf("failed to get events.json: %v", err)
+		}
+		defer func() { _ = resp.Body.Close() }()
+
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("expected 200, got %d", resp.StatusCode)
+		}
+
+		var events []eventstore.Event
+		if err := json.NewDecoder(resp.Body).Decode(&events); err != nil {
+			t.Fatalf("failed to decode events: %v", err)
+		}
+
+		// Should have 2 events now (not 3)
+		if len(events) != 2 {
+			t.Errorf("expected 2 events after marking one incorrect, got %d", len(events))
+		}
+
+		// Verify test-tag-2 is not in the list
+		for _, e := range events {
+			if e.Tag == "test-tag-2" {
+				t.Error("test-tag-2 should be excluded from events.json")
+			}
+		}
+
+		t.Log("Marked event correctly excluded from events.json")
+	})
+
+	// Step 9: Check plots.js asset is accessible
 	t.Run("check plots.js asset", func(t *testing.T) {
 		resp, err := client.Get(fmt.Sprintf("http://%s/assets/plot.js", serverAddr))
 		if err != nil {
