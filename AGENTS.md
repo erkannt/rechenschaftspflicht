@@ -197,6 +197,9 @@ type EventStore interface {
 }
 ```
 
+Query-specific operations (like tag suggestions) are implemented in the query layer
+by composing `GetAllEvents()` with filtering/projection logic.
+
 ### Filtering Events
 
 Use `OnlyActiveEvents()` in the views package to filter out events marked as incorrect:
