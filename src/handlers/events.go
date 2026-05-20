@@ -145,9 +145,9 @@ func EventsJsonHandler(eventStore eventstore.EventStore, logger *slog.Logger) ht
 	}
 }
 
-func PlotsHandler(eventStore eventstore.EventStore, logger *slog.Logger) httprouter.Handle {
+func PlotsHandler(queries *views.QueryHandler, logger *slog.Logger) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		events, err := eventStore.GetAll()
+		events, err := queries.GetEventsForPlots()
 		if err != nil {
 			logger.ErrorContext(r.Context(), "failed to retrieve events for plots", slog.Any("error", err))
 			http.Error(w, "Failed to retrieve events", http.StatusInternalServerError)

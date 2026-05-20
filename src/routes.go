@@ -37,7 +37,7 @@ func addRoutes(
 	router.POST("/record-event", requireLogin(handlers.RecordEventPostHandler(eventStore, auth, logger)))
 	router.GET("/all-events", requireLogin(handlers.AllEventsHandler(queryHandler, logger)))
 	router.GET("/events.json", requireLogin(handlers.EventsJsonHandler(eventStore, logger)))
-	router.GET("/plots", requireLogin(handlers.PlotsHandler(eventStore, logger)))
+	router.GET("/plots", requireLogin(handlers.PlotsHandler(queryHandler, logger)))
 	router.GET("/logout", requireLogin(handlers.LogoutHandler(auth)))
 	router.GET("/oops", handlers.OopsHandler)
 	router.POST("/add-user", requireBearerToken(handlers.AddUserHandler(userStore)))
