@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/erkannt/rechenschaftspflicht/services/authentication"
@@ -12,15 +11,6 @@ import (
 	"github.com/erkannt/rechenschaftspflicht/views"
 	"github.com/julienschmidt/httprouter"
 )
-
-type EventResponse struct {
-	Tag        string  `json:"tag"`
-	Comment    string  `json:"comment"`
-	Value      string  `json:"value"`
-	ValueNum   float64 `json:"valueNum"`
-	RecordedAt string  `json:"recordedAt"`
-	RecordedBy string  `json:"recordedBy"`
-}
 
 func RecordEventFormHandler(queries *views.QueryHandler, logger *slog.Logger) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -105,39 +95,17 @@ func AllEventsHandler(queries *views.QueryHandler, logger *slog.Logger) httprout
 	}
 }
 
-func EventsJsonHandler(eventStore eventstore.EventStore, logger *slog.Logger) httprouter.Handle {
+func EventsJsonHandler(queries *views.QueryHandler, logger *slog.Logger) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		events, err := eventStore.GetAll()
+		events, err := queries.GetEventsForJson()
 		if err != nil {
 			logger.ErrorContext(r.Context(), "failed to retrieve events", slog.Any("error", err))
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
 
-		var eventResponses []EventResponse
-		for _, event := range events {
-			if event.Value == "" {
-				continue
-			}
-
-			valueNum, err := strconv.ParseFloat(event.Value, 64)
-			if err != nil {
-				continue
-			}
-
-			eventResponse := EventResponse{
-				Tag:        event.Tag,
-				Comment:    event.Comment,
-				Value:      event.Value,
-				ValueNum:   valueNum,
-				RecordedAt: event.RecordedAt,
-				RecordedBy: event.RecordedBy,
-			}
-			eventResponses = append(eventResponses, eventResponse)
-		}
-
 		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(eventResponses); err != nil {
+		if err := json.NewEncoder(w).Encode(events); err != nil {
 			logger.ErrorContext(r.Context(), "failed to encode events to JSON", slog.Any("error", err))
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
