@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	"github.com/erkannt/rechenschaftspflicht/services/authentication"
 	"github.com/erkannt/rechenschaftspflicht/services/commands"
@@ -111,5 +112,41 @@ func PlotsHandler(queries *views.QueryHandler, logger *slog.Logger) httprouter.H
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
+	}
+}
+
+func MarkEventIncorrectPostHandler(cmdHandler *commands.CommandHandler, auth authentication.Auth, logger *slog.Logger) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, "invalid form data", http.StatusBadRequest)
+			return
+		}
+
+		sequenceStr := r.FormValue("sequence")
+		if sequenceStr == "" {
+			http.Error(w, "sequence is required", http.StatusBadRequest)
+			return
+		}
+
+		sequence, err := strconv.Atoi(sequenceStr)
+		if err != nil {
+			http.Error(w, "invalid sequence number", http.StatusBadRequest)
+			return
+		}
+
+		markedBy, err := auth.GetLoggedInUserEmail(r)
+		if err != nil {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		if err := cmdHandler.MarkEventAsIncorrect(r.Context(), sequence, markedBy); err != nil {
+			logger.ErrorContext(r.Context(), "failed to mark event as incorrect", slog.Any("error", err))
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		// Redirect back to all events page
+	http.Redirect(w, r, "/all-events", http.StatusSeeOther)
 	}
 }
