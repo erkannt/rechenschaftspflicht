@@ -7,6 +7,7 @@ import (
 )
 
 type Event struct {
+	EventType  string `json:"eventType"`
 	Tag        string `json:"tag"`
 	Comment    string `json:"comment"`
 	Value      string `json:"value"`
@@ -29,8 +30,12 @@ func NewEventStore(db *sql.DB) EventStore {
 }
 
 func (s *SQLiteEventStore) Record(event Event) error {
-	stmt := `INSERT INTO events (tag, comment, value, recordedAt, recordedBy) VALUES (?, ?, ?, ?, ?);`
-	_, err := s.db.Exec(stmt, event.Tag, event.Comment, event.Value, event.RecordedAt, event.RecordedBy)
+	eventType := event.EventType
+	if eventType == "" {
+		eventType = "EventRecorded"
+	}
+	stmt := `INSERT INTO events (event_type, tag, comment, value, recordedAt, recordedBy) VALUES (?, ?, ?, ?, ?, ?);`
+	_, err := s.db.Exec(stmt, eventType, event.Tag, event.Comment, event.Value, event.RecordedAt, event.RecordedBy)
 	return err
 }
 

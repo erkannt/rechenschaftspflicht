@@ -59,9 +59,9 @@ func setupTestDB(t *testing.T) *sql.DB {
 func insertEvents(t *testing.T, db *sql.DB, events []Event) {
 	t.Helper()
 
-	stmt := `INSERT INTO events (tag, comment, value, recordedAt, recordedBy) VALUES (?, ?, ?, ?, ?);`
+	stmt := `INSERT INTO events (event_type, tag, comment, value, recordedAt, recordedBy) VALUES (?, ?, ?, ?, ?, ?);`
 	for _, e := range events {
-		_, err := db.Exec(stmt, e.Tag, e.Comment, e.Value, e.RecordedAt, e.RecordedBy)
+		_, err := db.Exec(stmt, "EventRecorded", e.Tag, e.Comment, e.Value, e.RecordedAt, e.RecordedBy)
 		if err != nil {
 			t.Fatalf("failed to insert event: %v", err)
 		}

@@ -21,6 +21,7 @@ func InitDB(config config.Config) (*sql.DB, error) {
 	createEventsTable := `
 	CREATE TABLE IF NOT EXISTS events (
 		sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+		event_type TEXT NOT NULL DEFAULT 'EventRecorded',
 		tag TEXT,
 		comment TEXT,
 		value TEXT,
@@ -42,6 +43,20 @@ func InitDB(config config.Config) (*sql.DB, error) {
 	}
 	if _, err = db.Exec(createUsersTable); err != nil {
 		return nil, err
+	}
+
+	// Migration: Add event_type column if it doesn't exist (for existing databases)
+	// SQLite doesn't support ADD COLUMN IF NOT EXISTS, so we check manually
+	migrateAddEventType := `
+	SELECT COUNT(*) FROM pragma_table_info('events') WHERE name='event_type';
+	`
+	var count int
+	err = db.QueryRow(migrateAddEventType).Scan(&count)
+	if err == nil && count == 0 {
+		_, err = db.Exec(`ALTER TABLE events ADD COLUMN event_type TEXT NOT NULL DEFAULT 'EventRecorded';`)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return db, nil
