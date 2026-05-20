@@ -62,9 +62,10 @@ func RecordEventPostHandler(cmdHandler *commands.CommandHandler, auth authentica
 	}
 }
 
-func AllEventsHandler(queries *views.QueryHandler, logger *slog.Logger) httprouter.Handle {
+func AllEventsHandler(queries *views.QueryHandler, auth authentication.Auth, logger *slog.Logger) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		events, err := queries.GetAllEventsForList()
+		currentUserEmail, _ := auth.GetLoggedInUserEmail(r)
+		events, err := queries.GetAllEventsForListWithCurrentUser(currentUserEmail)
 		if err != nil {
 			logger.ErrorContext(r.Context(), "failed to retrieve events", slog.Any("error", err))
 			http.Error(w, "internal server error", http.StatusInternalServerError)

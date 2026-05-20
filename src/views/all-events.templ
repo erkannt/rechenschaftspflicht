@@ -10,11 +10,14 @@ templ AllEvents(events []EventListItem) {
 			for _, e := range events {
 				<li>
 					<strong>{ e.RecordedBy }</strong> { e.Tag } - { e.Value } - <time>{ e.RecordedAt }</time> - { e.Comment }
-					<form method="POST" action="/mark-event-incorrect" style="display: inline;">
-						<input type="hidden" name="sequence" value={ e.Sequence }/>
-						<button type="submit" style="color: red; background: none; border: 1px solid red; padding: 2px 6px; cursor: pointer;" 
-							onclick="return confirm('Mark this event as incorrect? This action cannot be undone.');">Mark Incorrect</button>
-					</form>
+					if e.CanMarkAsIncorrect {
+						form method="POST" action="/mark-event-incorrect" style="display: inline; margin-left: 0.5rem;" {
+							input type="hidden" name="sequence" value={ e.Sequence }
+							a href="#" onclick="if(confirm('Mark this event as incorrect? This action cannot be undone.')){this.closest('form').submit()};return false;" style="color: red; text-decoration: underline; cursor: pointer;" {
+								Mark Incorrect
+							}
+						}
+					}
 				</li>
 			}
 		</ul>

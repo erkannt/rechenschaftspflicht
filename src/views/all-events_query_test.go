@@ -110,3 +110,51 @@ func TestGetAllEventsForList(t *testing.T) {
 		})
 	}
 }
+
+func TestGetAllEventsForList_CurrentUserCanMarkOwnEvents(t *testing.T) {
+	t.Parallel()
+
+	currentUser := "current@example.com"
+	events := []eventstore.Event{
+		{
+			Sequence:   1,
+			EventType:  "EventRecorded",
+			Tag:        "my-event",
+			Comment:    "my event",
+			Value:      "10",
+			RecordedAt: "2024-01-01T00:00:00Z",
+			RecordedBy: currentUser,
+		},
+		{
+			Sequence:   2,
+			EventType:  "EventRecorded",
+			Tag:        "other-event",
+			Comment:    "other event",
+			Value:      "20",
+			RecordedAt: "2024-01-02T00:00:00Z",
+			RecordedBy: "other@example.com",
+		},
+	}
+
+	mockStore := &mockEventStore{events: events}
+	qh := NewQueryHandler(mockStore, newTestLogger())
+
+	result, err := qh.GetAllEventsForListWithCurrentUser(currentUser)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(result) != 2 {
+		t.Fatalf("expected 2 events, got %d", len(result))
+	}
+
+	// First event should be markable by current user
+	if !result[0].CanMarkAsIncorrect {
+		t.Error("expected current user's event to be markable")
+	}
+
+	// Second event should NOT be markable by current user
+	if result[1].CanMarkAsIncorrect {
+		t.Error("expected other user's event to NOT be markable")
+	}
+}
