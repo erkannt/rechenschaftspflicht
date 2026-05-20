@@ -20,18 +20,6 @@ func (m *mockEventStore) GetAllEvents() ([]eventstore.Event, error) {
 	return m.recorded, nil
 }
 
-func (m *mockEventStore) GetAllTags() ([]string, error) {
-	tags := make([]string, 0)
-	seen := make(map[string]bool)
-	for _, e := range m.recorded {
-		if !seen[e.Tag] {
-			tags = append(tags, e.Tag)
-			seen[e.Tag] = true
-		}
-	}
-	return tags, nil
-}
-
 func TestNewCommandHandler(t *testing.T) {
 	t.Parallel()
 

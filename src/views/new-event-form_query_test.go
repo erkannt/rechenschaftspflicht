@@ -23,6 +23,7 @@ func TestGetTagSuggestions(t *testing.T) {
 			name: "single tag is returned",
 			events: []eventstore.Event{
 				{
+					EventType:  "EventRecorded",
 					Tag:        "temperature",
 					Comment:    "first reading",
 					Value:      "20",
@@ -38,6 +39,7 @@ func TestGetTagSuggestions(t *testing.T) {
 			name: "duplicate tags are deduplicated",
 			events: []eventstore.Event{
 				{
+					EventType:  "EventRecorded",
 					Tag:        "temperature",
 					Comment:    "first",
 					Value:      "20",
@@ -45,6 +47,7 @@ func TestGetTagSuggestions(t *testing.T) {
 					RecordedBy: "user@example.com",
 				},
 				{
+					EventType:  "EventRecorded",
 					Tag:        "temperature",
 					Comment:    "second",
 					Value:      "21",
@@ -52,6 +55,7 @@ func TestGetTagSuggestions(t *testing.T) {
 					RecordedBy: "user@example.com",
 				},
 				{
+					EventType:  "EventRecorded",
 					Tag:        "humidity",
 					Comment:    "first",
 					Value:      "60",
@@ -68,6 +72,7 @@ func TestGetTagSuggestions(t *testing.T) {
 			name: "tags are sorted alphabetically",
 			events: []eventstore.Event{
 				{
+					EventType:  "EventRecorded",
 					Tag:        "zebra",
 					Comment:    "z",
 					Value:      "1",
@@ -75,6 +80,7 @@ func TestGetTagSuggestions(t *testing.T) {
 					RecordedBy: "user@example.com",
 				},
 				{
+					EventType:  "EventRecorded",
 					Tag:        "alpha",
 					Comment:    "a",
 					Value:      "2",
@@ -82,6 +88,7 @@ func TestGetTagSuggestions(t *testing.T) {
 					RecordedBy: "user@example.com",
 				},
 				{
+					EventType:  "EventRecorded",
 					Tag:        "beta",
 					Comment:    "b",
 					Value:      "3",
