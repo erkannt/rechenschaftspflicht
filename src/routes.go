@@ -9,7 +9,6 @@ import (
 	"github.com/erkannt/rechenschaftspflicht/services/authentication"
 	"github.com/erkannt/rechenschaftspflicht/services/commands"
 	"github.com/erkannt/rechenschaftspflicht/services/config"
-	"github.com/erkannt/rechenschaftspflicht/services/eventstore"
 	"github.com/erkannt/rechenschaftspflicht/services/userstore"
 	"github.com/erkannt/rechenschaftspflicht/views"
 	"github.com/julienschmidt/httprouter"
@@ -22,7 +21,6 @@ func addRoutes(
 	router *httprouter.Router,
 	logger *slog.Logger,
 	cfg config.Config,
-	eventStore eventstore.EventStore,
 	userStore userstore.UserStore,
 	auth authentication.Auth,
 	queryHandler *views.QueryHandler,
