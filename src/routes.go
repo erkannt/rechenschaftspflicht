@@ -7,6 +7,7 @@ import (
 	"github.com/erkannt/rechenschaftspflicht/handlers"
 	"github.com/erkannt/rechenschaftspflicht/middlewares"
 	"github.com/erkannt/rechenschaftspflicht/services/authentication"
+	"github.com/erkannt/rechenschaftspflicht/services/commands"
 	"github.com/erkannt/rechenschaftspflicht/services/config"
 	"github.com/erkannt/rechenschaftspflicht/services/eventstore"
 	"github.com/erkannt/rechenschaftspflicht/services/userstore"
@@ -25,6 +26,7 @@ func addRoutes(
 	userStore userstore.UserStore,
 	auth authentication.Auth,
 	queryHandler *views.QueryHandler,
+	cmdHandler *commands.CommandHandler,
 ) {
 	requireLogin := middlewares.MustBeLoggedIn(auth)
 	requireBearerToken := middlewares.RequireBearerToken(cfg.BearerToken)
@@ -34,7 +36,7 @@ func addRoutes(
 	router.GET("/login", handlers.LoginGetHandler(auth))
 	router.GET("/check-your-email", handlers.CheckYourEmailHandler)
 	router.GET("/record-event", requireLogin(handlers.RecordEventFormHandler(queryHandler, logger)))
-	router.POST("/record-event", requireLogin(handlers.RecordEventPostHandler(eventStore, auth, queryHandler, logger)))
+	router.POST("/record-event", requireLogin(handlers.RecordEventPostHandler(cmdHandler, auth, queryHandler, logger)))
 	router.GET("/all-events", requireLogin(handlers.AllEventsHandler(queryHandler, logger)))
 	router.GET("/events.json", requireLogin(handlers.EventsJsonHandler(queryHandler, logger)))
 	router.GET("/plots", requireLogin(handlers.PlotsHandler(queryHandler, logger)))

@@ -13,6 +13,7 @@ import (
 
 	"github.com/erkannt/rechenschaftspflicht/middlewares"
 	"github.com/erkannt/rechenschaftspflicht/services/authentication"
+	"github.com/erkannt/rechenschaftspflicht/services/commands"
 	"github.com/erkannt/rechenschaftspflicht/services/config"
 	database "github.com/erkannt/rechenschaftspflicht/services/db"
 	"github.com/erkannt/rechenschaftspflicht/services/eventstore"
@@ -48,10 +49,11 @@ func run(
 	userStore := userstore.NewUserStore(db)
 	auth := authentication.New(logger, cfg)
 	queryHandler := views.NewQueryHandler(eventStore)
+	cmdHandler := commands.NewCommandHandler(eventStore, logger)
 
 	// Create server
 	router := httprouter.New()
-	addRoutes(router, logger, cfg, eventStore, userStore, auth, queryHandler)
+	addRoutes(router, logger, cfg, eventStore, userStore, auth, queryHandler, cmdHandler)
 	requestLogging := sloghttp.New(logger)
 	handlerWithMiddlewares := middlewares.TemplCSSWithNonce(middlewares.SecurityHeaders(requestLogging(router)))
 

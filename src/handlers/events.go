@@ -4,10 +4,9 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
-	"time"
 
 	"github.com/erkannt/rechenschaftspflicht/services/authentication"
-	"github.com/erkannt/rechenschaftspflicht/services/eventstore"
+	"github.com/erkannt/rechenschaftspflicht/services/commands"
 	"github.com/erkannt/rechenschaftspflicht/views"
 	"github.com/julienschmidt/httprouter"
 )
@@ -30,7 +29,7 @@ func RecordEventFormHandler(queries *views.QueryHandler, logger *slog.Logger) ht
 	}
 }
 
-func RecordEventPostHandler(eventStore eventstore.EventStore, auth authentication.Auth, queries *views.QueryHandler, logger *slog.Logger) httprouter.Handle {
+func RecordEventPostHandler(cmdHandler *commands.CommandHandler, auth authentication.Auth, queries *views.QueryHandler, logger *slog.Logger) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "invalid form data", http.StatusBadRequest)
@@ -40,28 +39,13 @@ func RecordEventPostHandler(eventStore eventstore.EventStore, auth authenticatio
 		tag := r.FormValue("tag")
 		comment := r.FormValue("comment")
 		value := r.FormValue("value")
-
-		recordedAt := time.Now().Format(time.RFC3339)
 		recordedBy, _ := auth.GetLoggedInUserEmail(r)
 
-		event := eventstore.Event{
-			Tag:        tag,
-			Comment:    comment,
-			Value:      value,
-			RecordedAt: recordedAt,
-			RecordedBy: recordedBy,
-		}
-
-		if err := eventStore.Record(event); err != nil {
+		if err := cmdHandler.RecordEvent(r.Context(), tag, comment, value, recordedBy); err != nil {
 			logger.ErrorContext(r.Context(), "failed to record event", slog.Any("error", err))
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
-
-		logger.DebugContext(r.Context(), "event recorded",
-			slog.String("tag", event.Tag),
-			slog.String("recordedBy", event.RecordedBy),
-		)
 
 		tags, err := queries.GetTagSuggestions()
 		if err != nil {
