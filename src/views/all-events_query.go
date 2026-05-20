@@ -3,12 +3,13 @@ package views
 // EventListItem is the read model for the all-events list view.
 // It contains only the data needed for displaying events in a list.
 type EventListItem struct {
-	Sequence          int
-	RecordedBy        string
-	Tag               string
-	Value             string
-	RecordedAt        string
-	Comment           string
+	Sequence           int
+	RecordedBy         string // Display username
+	RecordedByEmail    string // Email for ownership comparison
+	Tag                string
+	Value              string
+	RecordedAt         string
+	Comment            string
 	CanMarkAsIncorrect bool
 }
 
@@ -25,12 +26,13 @@ func (h *QueryHandler) GetAllEventsForList() ([]EventListItem, error) {
 	items := make([]EventListItem, 0, len(active))
 	for _, e := range active {
 		items = append(items, EventListItem{
-			Sequence:   e.Sequence,
-			RecordedBy: e.RecordedBy,
-			Tag:        e.Tag,
-			Value:      e.Value,
-			RecordedAt: e.RecordedAt,
-			Comment:    e.Comment,
+			Sequence:        e.Sequence,
+			RecordedBy:      e.RecordedByName,
+			RecordedByEmail: e.RecordedBy,
+			Tag:             e.Tag,
+			Value:           e.Value,
+			RecordedAt:      e.RecordedAt,
+			Comment:         e.Comment,
 		})
 	}
 
@@ -47,7 +49,7 @@ func (h *QueryHandler) GetAllEventsForListWithCurrentUser(currentUserEmail strin
 	}
 
 	for i := range items {
-		items[i].CanMarkAsIncorrect = items[i].RecordedBy == currentUserEmail
+		items[i].CanMarkAsIncorrect = items[i].RecordedByEmail == currentUserEmail
 	}
 
 	return items, nil

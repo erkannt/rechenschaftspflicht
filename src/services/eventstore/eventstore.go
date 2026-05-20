@@ -7,13 +7,14 @@ import (
 )
 
 type Event struct {
-	Sequence   int    `json:"sequence"`
-	EventType  string `json:"eventType"`
-	Tag        string `json:"tag"`
-	Comment    string `json:"comment"`
-	Value      string `json:"value"`
-	RecordedAt string `json:"recordedAt"`
-	RecordedBy string `json:"recordedBy"`
+	Sequence       int    `json:"sequence"`
+	EventType      string `json:"eventType"`
+	Tag            string `json:"tag"`
+	Comment        string `json:"comment"`
+	Value          string `json:"value"`
+	RecordedAt     string `json:"recordedAt"`
+	RecordedBy     string `json:"recordedBy"`     // email of the user who recorded the event
+	RecordedByName string `json:"recordedByName"` // display username
 }
 
 // EventPayload is used for non-legacy events to store structured data.
@@ -51,10 +52,10 @@ func (s *SQLiteEventStore) RaiseEvent(event Event) error {
 }
 
 // GetAllEvents returns all events ordered by sequence (descending).
-// It includes the sequence number which can be used to reference events.
+// It includes the sequence number and both the email (recordedBy) and username (recordedByName).
 func (s *SQLiteEventStore) GetAllEvents() ([]Event, error) {
 	rows, err := s.db.Query(`
-		SELECT e.sequence, e.tag, e.comment, e.value, e.recordedAt, e.event_type, u.username
+		SELECT e.sequence, e.tag, e.comment, e.value, e.recordedAt, e.event_type, e.recordedBy, u.username
 		FROM events e
 		LEFT JOIN users u ON e.recordedBy = u.email
 		ORDER BY e.sequence DESC;
@@ -72,7 +73,7 @@ func (s *SQLiteEventStore) GetAllEvents() ([]Event, error) {
 	var events []Event
 	for rows.Next() {
 		var e Event
-		if err := rows.Scan(&e.Sequence, &e.Tag, &e.Comment, &e.Value, &e.RecordedAt, &e.EventType, &e.RecordedBy); err != nil {
+		if err := rows.Scan(&e.Sequence, &e.Tag, &e.Comment, &e.Value, &e.RecordedAt, &e.EventType, &e.RecordedBy, &e.RecordedByName); err != nil {
 			return nil, err
 		}
 		events = append(events, e)
