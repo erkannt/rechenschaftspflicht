@@ -8,7 +8,7 @@ import (
 )
 
 func TestNewEventForm_RendersDatalist_WithExistingTags(t *testing.T) {
-	tags := []string{"alpha", "beta"}
+	tags := []TagSuggestion{{Tag: "alpha"}, {Tag: "beta"}}
 
 	component := NewEventForm(tags)
 
@@ -32,8 +32,8 @@ func TestNewEventForm_RendersDatalist_WithExistingTags(t *testing.T) {
 
 	// Check each tag appears as an option
 	for _, tag := range tags {
-		if !strings.Contains(html, `<option value="`+tag+`">`) {
-			t.Errorf("expected <option value=\"%s\"> in output", tag)
+		if !strings.Contains(html, `<option value="`+tag.Tag+`">`) {
+			t.Errorf("expected <option value=\"%s\"> in output", tag.Tag)
 		}
 	}
 }
@@ -72,7 +72,7 @@ func TestNewEventForm_RendersWithoutDatalist_WhenNoTags(t *testing.T) {
 }
 
 func TestNewEventFormWithSuccessBanner_RendersDatalist_WithExistingTags(t *testing.T) {
-	tags := []string{"my-tag"}
+	tags := []TagSuggestion{{Tag: "my-tag"}}
 
 	component := NewEventFormWithSuccessBanner(tags)
 

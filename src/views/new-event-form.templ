@@ -1,6 +1,6 @@
 package views
 
-templ NewEventForm(existingTags []string) {
+templ NewEventForm(existingTags []TagSuggestion) {
 	<h1>Log New Event</h1>
 	<form method="post">
 		<label for="tag">Tag:</label>
@@ -9,7 +9,7 @@ templ NewEventForm(existingTags []string) {
 		if len(existingTags) > 0 {
 			<datalist id="tag-suggestions">
 				for _, tag := range existingTags {
-					<option value={ tag }/>
+					<option value={ tag.Tag }/>
 				}
 			</datalist>
 		}
@@ -22,7 +22,7 @@ templ NewEventForm(existingTags []string) {
 	</form>
 }
 
-templ NewEventFormWithSuccessBanner(existingTags []string) {
+templ NewEventFormWithSuccessBanner(existingTags []TagSuggestion) {
 	@EventRecordedBanner()
 	@NewEventForm(existingTags)
 }

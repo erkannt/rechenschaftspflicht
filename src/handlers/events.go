@@ -22,9 +22,9 @@ type EventResponse struct {
 	RecordedBy string  `json:"recordedBy"`
 }
 
-func RecordEventFormHandler(eventStore eventstore.EventStore, logger *slog.Logger) httprouter.Handle {
+func RecordEventFormHandler(queries *views.QueryHandler, logger *slog.Logger) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		tags, err := eventStore.GetAllTags()
+		tags, err := queries.GetTagSuggestions()
 		if err != nil {
 			logger.ErrorContext(r.Context(), "failed to retrieve tags", slog.Any("error", err))
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -40,7 +40,7 @@ func RecordEventFormHandler(eventStore eventstore.EventStore, logger *slog.Logge
 	}
 }
 
-func RecordEventPostHandler(eventStore eventstore.EventStore, auth authentication.Auth, logger *slog.Logger) httprouter.Handle {
+func RecordEventPostHandler(eventStore eventstore.EventStore, auth authentication.Auth, queries *views.QueryHandler, logger *slog.Logger) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "invalid form data", http.StatusBadRequest)
@@ -73,7 +73,7 @@ func RecordEventPostHandler(eventStore eventstore.EventStore, auth authenticatio
 			slog.String("recordedBy", event.RecordedBy),
 		)
 
-		tags, err := eventStore.GetAllTags()
+		tags, err := queries.GetTagSuggestions()
 		if err != nil {
 			logger.ErrorContext(r.Context(), "failed to retrieve tags for success form", slog.Any("error", err))
 		}
