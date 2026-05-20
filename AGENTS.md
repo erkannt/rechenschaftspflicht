@@ -176,3 +176,58 @@ func (s *SQLiteEventStore) GetAll() ([]Event, error) {
 - Implement proper graceful shutdown
 - Consider caching for frequently accessed data
 - Use context timeouts for external calls
+
+## Event Sourcing
+
+The application uses an event-sourced architecture with a single `events` table.
+
+### Event Types
+
+- **EventRecorded** (legacy): Structured data in separate columns (tag, comment, value)
+- **EventMarkedAsIncorrect**: JSON payload in `value` column with `originalEventSequence`
+
+### EventStore Interface
+
+The EventStore exposes two minimal methods:
+
+```go
+type EventStore interface {
+    RaiseEvent(event Event) error      // Store any event type
+    GetAllEvents() ([]Event, error)    // Retrieve all events with sequence numbers
+}
+```
+
+### Filtering Events
+
+Use `OnlyActiveEvents()` in the views package to filter out events marked as incorrect:
+
+```go
+events, err := h.eventStore.GetAllEvents()
+active := views.OnlyActiveEvents(events, h.logger)
+// Project active events to view model
+```
+
+### Adding New Event Types
+
+1. Define the event type string (e.g., `"EventMarkedAsIncorrect"`)
+2. Store payload as JSON in the `value` column
+3. Update `OnlyActiveEvents()` filter if the event should affect visibility
+4. Create a command in `services/commands/` to raise the event
+
+## Feature: Mark Events as Incorrect
+
+Users can mark their recorded events as incorrect via the All Events page.
+
+### How It Works
+
+1. User clicks "Mark Incorrect" button next to an event
+2. POST request to `/mark-event-incorrect` with event sequence
+3. `EventMarkedAsIncorrect` event is raised with JSON payload
+4. All queries filter out the marked event via `OnlyActiveEvents()`
+
+### Files Involved
+
+- `src/services/commands/mark-event-incorrect.go` - Command implementation
+- `src/handlers/events.go` - HTTP handler (`MarkEventIncorrectPostHandler`)
+- `src/views/filters.go` - `OnlyActiveEvents()` filter function
+- `src/views/all-events.templ` - UI with Mark Incorrect button
