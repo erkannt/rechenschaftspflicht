@@ -10,7 +10,8 @@ type PlotData struct {
 	RecordedAt string
 }
 
-// GetEventsForPlots retrieves events and filters/projects them to PlotData read models.
+// GetEventsForPlots retrieves events, filters out inactive ones,
+// and filters/projects them to PlotData read models.
 // Only events with valid numeric values are included.
 func (h *QueryHandler) GetEventsForPlots() ([]PlotData, error) {
 	events, err := h.eventStore.GetAllEvents()
@@ -18,8 +19,10 @@ func (h *QueryHandler) GetEventsForPlots() ([]PlotData, error) {
 		return nil, err
 	}
 
+	active := OnlyActiveEvents(events, h.logger)
+
 	data := make([]PlotData, 0)
-	for _, e := range events {
+	for _, e := range active {
 		// Skip events without a value
 		if e.Value == "" {
 			continue

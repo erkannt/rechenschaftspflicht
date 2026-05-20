@@ -50,7 +50,7 @@ func TestNewQueryHandler(t *testing.T) {
 	t.Parallel()
 
 	mockStore := &mockEventStore{}
-	qh := NewQueryHandler(mockStore)
+	qh := NewQueryHandler(mockStore, newTestLogger())
 
 	if qh == nil {
 		t.Fatal("expected QueryHandler to be created, got nil")

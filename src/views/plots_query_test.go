@@ -23,6 +23,8 @@ func TestGetEventsForPlots(t *testing.T) {
 			name: "event without value is skipped",
 			events: []eventstore.Event{
 				{
+					Sequence:   1,
+					EventType:  "EventRecorded",
 					Tag:        "no-value-tag",
 					Comment:    "no value here",
 					Value:      "",
@@ -36,6 +38,8 @@ func TestGetEventsForPlots(t *testing.T) {
 			name: "event with valid numeric value is included",
 			events: []eventstore.Event{
 				{
+					Sequence:   1,
+					EventType:  "EventRecorded",
 					Tag:        "temperature",
 					Comment:    "morning reading",
 					Value:      "23.5",
@@ -55,6 +59,8 @@ func TestGetEventsForPlots(t *testing.T) {
 			name: "event with invalid numeric value is skipped",
 			events: []eventstore.Event{
 				{
+					Sequence:   1,
+					EventType:  "EventRecorded",
 					Tag:        "invalid",
 					Comment:    "not a number",
 					Value:      "not-a-number",
@@ -68,6 +74,8 @@ func TestGetEventsForPlots(t *testing.T) {
 			name: "multiple events filtered and projected correctly",
 			events: []eventstore.Event{
 				{
+					Sequence:   1,
+					EventType:  "EventRecorded",
 					Tag:        "temperature",
 					Comment:    "valid",
 					Value:      "20.0",
@@ -75,6 +83,8 @@ func TestGetEventsForPlots(t *testing.T) {
 					RecordedBy: "user@example.com",
 				},
 				{
+					Sequence:   2,
+					EventType:  "EventRecorded",
 					Tag:        "humidity",
 					Comment:    "empty value",
 					Value:      "",
@@ -82,6 +92,8 @@ func TestGetEventsForPlots(t *testing.T) {
 					RecordedBy: "user@example.com",
 				},
 				{
+					Sequence:   3,
+					EventType:  "EventRecorded",
 					Tag:        "pressure",
 					Comment:    "valid",
 					Value:      "1013.25",
@@ -109,7 +121,7 @@ func TestGetEventsForPlots(t *testing.T) {
 			t.Parallel()
 
 			mockStore := &mockEventStore{events: tt.events}
-			qh := NewQueryHandler(mockStore)
+			qh := NewQueryHandler(mockStore, newTestLogger())
 
 			result, err := qh.GetEventsForPlots()
 			if err != nil {

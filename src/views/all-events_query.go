@@ -3,6 +3,7 @@ package views
 // EventListItem is the read model for the all-events list view.
 // It contains only the data needed for displaying events in a list.
 type EventListItem struct {
+	Sequence   int
 	RecordedBy string
 	Tag        string
 	Value      string
@@ -10,16 +11,20 @@ type EventListItem struct {
 	Comment    string
 }
 
-// GetAllEventsForList retrieves all events and projects them to EventListItem read models.
+// GetAllEventsForList retrieves all events, filters out inactive ones,
+// and projects them to EventListItem read models.
 func (h *QueryHandler) GetAllEventsForList() ([]EventListItem, error) {
 	events, err := h.eventStore.GetAllEvents()
 	if err != nil {
 		return nil, err
 	}
 
-	items := make([]EventListItem, 0, len(events))
-	for _, e := range events {
+	active := OnlyActiveEvents(events, h.logger)
+
+	items := make([]EventListItem, 0, len(active))
+	for _, e := range active {
 		items = append(items, EventListItem{
+			Sequence:   e.Sequence,
 			RecordedBy: e.RecordedBy,
 			Tag:        e.Tag,
 			Value:      e.Value,

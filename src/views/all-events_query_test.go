@@ -23,6 +23,8 @@ func TestGetAllEventsForList(t *testing.T) {
 			name: "single event is projected correctly",
 			events: []eventstore.Event{
 				{
+					Sequence:   1,
+					EventType:  "EventRecorded",
 					Tag:        "test-tag",
 					Comment:    "test comment",
 					Value:      "42",
@@ -32,6 +34,7 @@ func TestGetAllEventsForList(t *testing.T) {
 			},
 			expected: []EventListItem{
 				{
+					Sequence:   1,
 					Tag:        "test-tag",
 					Comment:    "test comment",
 					Value:      "42",
@@ -44,6 +47,8 @@ func TestGetAllEventsForList(t *testing.T) {
 			name: "multiple events are projected in order",
 			events: []eventstore.Event{
 				{
+					Sequence:   1,
+					EventType:  "EventRecorded",
 					Tag:        "first",
 					Comment:    "first comment",
 					Value:      "1",
@@ -51,6 +56,8 @@ func TestGetAllEventsForList(t *testing.T) {
 					RecordedBy: "user1@example.com",
 				},
 				{
+					Sequence:   2,
+					EventType:  "EventRecorded",
 					Tag:        "second",
 					Comment:    "second comment",
 					Value:      "2",
@@ -60,6 +67,7 @@ func TestGetAllEventsForList(t *testing.T) {
 			},
 			expected: []EventListItem{
 				{
+					Sequence:   1,
 					Tag:        "first",
 					Comment:    "first comment",
 					Value:      "1",
@@ -67,6 +75,7 @@ func TestGetAllEventsForList(t *testing.T) {
 					RecordedBy: "user1@example.com",
 				},
 				{
+					Sequence:   2,
 					Tag:        "second",
 					Comment:    "second comment",
 					Value:      "2",
@@ -82,7 +91,7 @@ func TestGetAllEventsForList(t *testing.T) {
 			t.Parallel()
 
 			mockStore := &mockEventStore{events: tt.events}
-			qh := NewQueryHandler(mockStore)
+			qh := NewQueryHandler(mockStore, newTestLogger())
 
 			result, err := qh.GetAllEventsForList()
 			if err != nil {

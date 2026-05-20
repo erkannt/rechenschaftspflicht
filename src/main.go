@@ -48,7 +48,7 @@ func run(
 	eventStore := eventstore.NewEventStore(db)
 	userStore := userstore.NewUserStore(db)
 	auth := authentication.New(logger, cfg)
-	queryHandler := views.NewQueryHandler(eventStore)
+	queryHandler := views.NewQueryHandler(eventStore, logger)
 	cmdHandler := commands.NewCommandHandler(eventStore, logger)
 
 	// Create server

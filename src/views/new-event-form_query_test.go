@@ -102,7 +102,7 @@ func TestGetTagSuggestions(t *testing.T) {
 			t.Parallel()
 
 			mockStore := &mockEventStore{events: tt.events}
-			qh := NewQueryHandler(mockStore)
+			qh := NewQueryHandler(mockStore, newTestLogger())
 
 			result, err := qh.GetTagSuggestions()
 			if err != nil {
