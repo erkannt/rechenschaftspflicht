@@ -17,6 +17,7 @@ import (
 	database "github.com/erkannt/rechenschaftspflicht/services/db"
 	"github.com/erkannt/rechenschaftspflicht/services/eventstore"
 	"github.com/erkannt/rechenschaftspflicht/services/userstore"
+	"github.com/erkannt/rechenschaftspflicht/views"
 	"github.com/julienschmidt/httprouter"
 	"github.com/lmittmann/tint"
 	sloghttp "github.com/samber/slog-http"
@@ -46,10 +47,11 @@ func run(
 	eventStore := eventstore.NewEventStore(db)
 	userStore := userstore.NewUserStore(db)
 	auth := authentication.New(logger, cfg)
+	queryHandler := views.NewQueryHandler(eventStore)
 
 	// Create server
 	router := httprouter.New()
-	addRoutes(router, logger, cfg, eventStore, userStore, auth)
+	addRoutes(router, logger, cfg, eventStore, userStore, auth, queryHandler)
 	requestLogging := sloghttp.New(logger)
 	handlerWithMiddlewares := middlewares.TemplCSSWithNonce(middlewares.SecurityHeaders(requestLogging(router)))
 
