@@ -1,19 +1,49 @@
 package views
 
 templ AllEvents(events []EventListItem) {
+	<style nonce={ templ.GetNonce(ctx) }>
+  .all-events {
+    li {
+        display: flex;
+        flex-wrap: wrap;
+        column-gap: 1em;
+      }
+    form {
+        margin-block-end: 0;
+
+        button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: var(--primary); /* Uses Pico's theme link color */
+  text-decoration: underline;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  display: inline;
+}
+
+button:hover {
+  color: var(--primary-hover); /* Uses Pico's theme hover color */
+}
+
+      }
+    }
+  </style>
 	<h1>All Events</h1>
 	if len(events) == 0 {
 		<p>No events have been recorded.</p>
 	} else {
 		<a href="events.json">Download all events as JSON</a>
-		<ul>
+		<ul class="all-events">
 			for _, e := range events {
 				<li>
 					<strong>{ e.RecordedBy }</strong> { e.Tag } - { e.Value } - <time>{ e.RecordedAt }</time> - { e.Comment }
 					if e.CanMarkAsIncorrect {
 						<form method="POST" action="/mark-event-incorrect" style="display: inline; margin-left: 0.5rem;">
 							<input type="hidden" name="sequence" value={ e.Sequence }/>
-							<a href="#" onclick="if(confirm('Mark this event as incorrect? This action cannot be undone.')){this.closest('form').submit()};return false;" style="color: red; text-decoration: underline; cursor: pointer;">Mark Incorrect</a>
+							<button type="submit">Delete</button>
 						</form>
 					}
 				</li>
