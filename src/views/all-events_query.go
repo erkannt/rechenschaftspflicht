@@ -12,7 +12,7 @@ type EventListItem struct {
 
 // GetAllEventsForList retrieves all events and projects them to EventListItem read models.
 func (h *QueryHandler) GetAllEventsForList() ([]EventListItem, error) {
-	events, err := h.eventStore.GetAll()
+	events, err := h.eventStore.GetAllEvents()
 	if err != nil {
 		return nil, err
 	}

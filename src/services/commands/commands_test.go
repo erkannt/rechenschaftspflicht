@@ -11,12 +11,12 @@ type mockEventStore struct {
 	recorded []eventstore.Event
 }
 
-func (m *mockEventStore) Record(event eventstore.Event) error {
+func (m *mockEventStore) RaiseEvent(event eventstore.Event) error {
 	m.recorded = append(m.recorded, event)
 	return nil
 }
 
-func (m *mockEventStore) GetAll() ([]eventstore.Event, error) {
+func (m *mockEventStore) GetAllEvents() ([]eventstore.Event, error) {
 	return m.recorded, nil
 }
 

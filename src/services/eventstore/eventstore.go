@@ -7,6 +7,7 @@ import (
 )
 
 type Event struct {
+	Sequence   int    `json:"sequence"`
 	EventType  string `json:"eventType"`
 	Tag        string `json:"tag"`
 	Comment    string `json:"comment"`
@@ -15,9 +16,14 @@ type Event struct {
 	RecordedBy string `json:"recordedBy"`
 }
 
+// EventPayload is used for non-legacy events to store structured data.
+type EventPayload struct {
+	OriginalEventSequence int `json:"originalEventSequence,omitempty"`
+}
+
 type EventStore interface {
-	Record(event Event) error
-	GetAll() ([]Event, error)
+	RaiseEvent(event Event) error
+	GetAllEvents() ([]Event, error)
 	GetAllTags() ([]string, error)
 }
 
@@ -29,19 +35,27 @@ func NewEventStore(db *sql.DB) EventStore {
 	return &SQLiteEventStore{db: db}
 }
 
-func (s *SQLiteEventStore) Record(event Event) error {
+// RaiseEvent stores an event in the database.
+// For legacy EventRecorded events, it uses the structured columns (tag, comment, value).
+// For other event types, it stores the payload as JSON in the value column.
+func (s *SQLiteEventStore) RaiseEvent(event Event) error {
 	eventType := event.EventType
 	if eventType == "" {
 		eventType = "EventRecorded"
 	}
+
+	// For legacy EventRecorded events, use structured columns
+	// For other event types, the payload should already be JSON in event.Value
 	stmt := `INSERT INTO events (event_type, tag, comment, value, recordedAt, recordedBy) VALUES (?, ?, ?, ?, ?, ?);`
 	_, err := s.db.Exec(stmt, eventType, event.Tag, event.Comment, event.Value, event.RecordedAt, event.RecordedBy)
 	return err
 }
 
-func (s *SQLiteEventStore) GetAll() ([]Event, error) {
+// GetAllEvents returns all events ordered by sequence (descending).
+// It includes the sequence number which can be used to reference events.
+func (s *SQLiteEventStore) GetAllEvents() ([]Event, error) {
 	rows, err := s.db.Query(`
-		SELECT e.tag, e.comment, e.value, e.recordedAt, u.username
+		SELECT e.sequence, e.tag, e.comment, e.value, e.recordedAt, e.event_type, u.username
 		FROM events e
 		LEFT JOIN users u ON e.recordedBy = u.email
 		ORDER BY e.sequence DESC;
@@ -59,7 +73,7 @@ func (s *SQLiteEventStore) GetAll() ([]Event, error) {
 	var events []Event
 	for rows.Next() {
 		var e Event
-		if err := rows.Scan(&e.Tag, &e.Comment, &e.Value, &e.RecordedAt, &e.RecordedBy); err != nil {
+		if err := rows.Scan(&e.Sequence, &e.Tag, &e.Comment, &e.Value, &e.RecordedAt, &e.EventType, &e.RecordedBy); err != nil {
 			return nil, err
 		}
 		events = append(events, e)

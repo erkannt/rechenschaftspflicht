@@ -13,7 +13,7 @@ type PlotData struct {
 // GetEventsForPlots retrieves events and filters/projects them to PlotData read models.
 // Only events with valid numeric values are included.
 func (h *QueryHandler) GetEventsForPlots() ([]PlotData, error) {
-	events, err := h.eventStore.GetAll()
+	events, err := h.eventStore.GetAllEvents()
 	if err != nil {
 		return nil, err
 	}

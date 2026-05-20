@@ -46,7 +46,7 @@ func (h *CommandHandler) RecordEvent(
 		RecordedBy: recordedBy,
 	}
 
-	if err := h.eventStore.Record(event); err != nil {
+	if err := h.eventStore.RaiseEvent(event); err != nil {
 		return fmt.Errorf("failed to record event: %w", err)
 	}
 

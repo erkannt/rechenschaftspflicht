@@ -12,12 +12,12 @@ type mockEventStore struct {
 	tags   []string // If set, used by GetAllTags; otherwise derived from events
 }
 
-func (m *mockEventStore) Record(event eventstore.Event) error {
+func (m *mockEventStore) RaiseEvent(event eventstore.Event) error {
 	m.events = append(m.events, event)
 	return nil
 }
 
-func (m *mockEventStore) GetAll() ([]eventstore.Event, error) {
+func (m *mockEventStore) GetAllEvents() ([]eventstore.Event, error) {
 	return m.events, nil
 }
 

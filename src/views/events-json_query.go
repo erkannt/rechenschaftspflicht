@@ -16,7 +16,7 @@ type EventJson struct {
 // GetEventsForJson retrieves events and filters/projects them for JSON API response.
 // Only events with valid numeric values are included.
 func (h *QueryHandler) GetEventsForJson() ([]EventJson, error) {
-	events, err := h.eventStore.GetAll()
+	events, err := h.eventStore.GetAllEvents()
 	if err != nil {
 		return nil, err
 	}
