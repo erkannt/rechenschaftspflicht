@@ -423,6 +423,82 @@ func TestIntegrationHappyPath(t *testing.T) {
 		t.Logf("plot.js loaded successfully (%d bytes)", len(body))
 	})
 
+	// Step 10: Verify Mark Incorrect link visibility (multi-user scenario)
+	t.Run("verify mark incorrect link only for own events", func(t *testing.T) {
+		// Create a second user
+		payload := map[string]string{
+			"email":    "seconduser@example.com",
+			"username": "seconduser",
+		}
+		body, _ := json.Marshal(payload)
+		req, _ := http.NewRequest("POST", fmt.Sprintf("http://%s/add-user", serverAddr), bytes.NewBuffer(body))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+testBearerToken)
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Fatalf("failed to create second user: %v", err)
+		}
+		_ = resp.Body.Close()
+
+		// Login as second user
+		jar2, _ := cookiejar.New(nil)
+		client2 := &http.Client{Jar: jar2}
+
+		formData := url.Values{}
+		formData.Set("email", "seconduser@example.com")
+		resp, err = client2.PostForm(fmt.Sprintf("http://%s/login", serverAddr), formData)
+		if err != nil {
+			t.Fatalf("failed to request login for second user: %v", err)
+		}
+		_ = resp.Body.Close()
+
+		// Get magic link for second user
+		magicLink, err := getMagicLinkFromMailpit(mailpitHost, mailpitAPIPort, "seconduser@example.com")
+		if err != nil {
+			t.Fatalf("failed to get magic link for second user: %v", err)
+		}
+		token := extractTokenFromURL(magicLink)
+		resp, err = client2.Get(fmt.Sprintf("http://%s/login?token=%s", serverAddr, token))
+		if err != nil {
+			t.Fatalf("failed to visit magic link for second user: %v", err)
+		}
+		_ = resp.Body.Close()
+
+		// Second user records an event
+		formData = url.Values{}
+		formData.Set("tag", "second-user-tag")
+		formData.Set("value", "99")
+		formData.Set("comment", "event by second user")
+		resp, err = client2.PostForm(fmt.Sprintf("http://%s/record-event", serverAddr), formData)
+		if err != nil {
+			t.Fatalf("failed to record event for second user: %v", err)
+		}
+		_ = resp.Body.Close()
+
+		// First user views all-events page
+		resp, err = client.Get(fmt.Sprintf("http://%s/all-events", serverAddr))
+		if err != nil {
+			t.Fatalf("failed to get all-events: %v", err)
+		}
+		body, _ = io.ReadAll(resp.Body)
+		_ = resp.Body.Close()
+
+		content := string(body)
+
+		// Count how many "Mark Incorrect" links appear
+		// Should only appear for first user's events, not second user's event
+		markIncorrectCount := strings.Count(content, "Mark Incorrect")
+
+		// We expect 2 (the two events from step 3 that weren't marked incorrect)
+		// The second user's event should NOT have a Mark Incorrect link for first user
+		if markIncorrectCount != 2 {
+			t.Errorf("expected 2 'Mark Incorrect' links (only for own events), got %d", markIncorrectCount)
+			t.Logf("Page content snippet:\n%s", content)
+		} else {
+			t.Logf("Correct: Found %d 'Mark Incorrect' links (only for own events)", markIncorrectCount)
+		}
+	})
+
 	// Cancel context to stop server
 	cancel()
 
