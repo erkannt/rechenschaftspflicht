@@ -1,6 +1,9 @@
 package views
 
-import "strconv"
+import (
+	"strconv"
+	"strings"
+)
 
 // EventJson is the read model for the JSON API endpoint.
 // It includes both the raw value string and the parsed numeric value.
@@ -38,7 +41,7 @@ func (h *QueryHandler) GetEventsForJson() ([]EventJson, error) {
 		}
 
 		result = append(result, EventJson{
-			Tag:        e.Tag,
+			Tag:        strings.ToLower(e.Tag),
 			Comment:    e.Comment,
 			Value:      e.Value,
 			ValueNum:   valueNum,

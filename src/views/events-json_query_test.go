@@ -74,6 +74,28 @@ func TestGetEventsForJson(t *testing.T) {
 			expected: []EventJson{},
 		},
 		{
+			name: "uppercase tag is lowercased",
+			events: []eventstore.Event{
+				{
+					Sequence:   1,
+					EventType:  "EventRecorded",
+					Tag:        "Temperature",
+					Value:      "20",
+					RecordedAt: "2024-01-01T00:00:00Z",
+					RecordedBy: "user@example.com",
+				},
+			},
+			expected: []EventJson{
+				{
+					Tag:        "temperature",
+					Value:      "20",
+					ValueNum:   20.0,
+					RecordedAt: "2024-01-01T00:00:00Z",
+					RecordedBy: "user@example.com",
+				},
+			},
+		},
+		{
 			name: "multiple events filtered and projected correctly",
 			events: []eventstore.Event{
 				{
