@@ -71,6 +71,26 @@ func TestGetEventsForPlots(t *testing.T) {
 			expected: []PlotData{},
 		},
 		{
+			name: "uppercase tag is lowercased",
+			events: []eventstore.Event{
+				{
+					Sequence:   1,
+					EventType:  "EventRecorded",
+					Tag:        "Temperature",
+					Value:      "20",
+					RecordedAt: "2024-01-01T00:00:00Z",
+					RecordedBy: "user@example.com",
+				},
+			},
+			expected: []PlotData{
+				{
+					Tag:        "temperature",
+					Value:      20.0,
+					RecordedAt: "2024-01-01T00:00:00Z",
+				},
+			},
+		},
+		{
 			name: "multiple events filtered and projected correctly",
 			events: []eventstore.Event{
 				{

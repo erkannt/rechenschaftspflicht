@@ -1,6 +1,9 @@
 package views
 
-import "strconv"
+import (
+	"strconv"
+	"strings"
+)
 
 // PlotData is the read model for the plots view.
 // It contains only numeric events that can be visualized.
@@ -35,7 +38,7 @@ func (h *QueryHandler) GetEventsForPlots() ([]PlotData, error) {
 		}
 
 		data = append(data, PlotData{
-			Tag:        e.Tag,
+			Tag:        strings.ToLower(e.Tag),
 			Value:      valueNum,
 			RecordedAt: e.RecordedAt,
 		})
