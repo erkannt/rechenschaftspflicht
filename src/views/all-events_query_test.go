@@ -46,6 +46,32 @@ func TestGetAllEventsForList(t *testing.T) {
 			},
 		},
 		{
+			name: "uppercase tag is lowercased in projection",
+			events: []eventstore.Event{
+				{
+					Sequence:       1,
+					EventType:      "EventRecorded",
+					Tag:            "My-Tag",
+					Comment:        "c",
+					Value:          "1",
+					RecordedAt:     "2024-01-01T00:00:00Z",
+					RecordedBy:     "user@example.com",
+					RecordedByName: "u",
+				},
+			},
+			expected: []EventListItem{
+				{
+					Sequence:        1,
+					RecordedBy:      "u",
+					RecordedByEmail: "user@example.com",
+					Tag:             "my-tag",
+					Comment:         "c",
+					Value:           "1",
+					RecordedAt:      "2024-01-01T00:00:00Z",
+				},
+			},
+		},
+		{
 			name: "multiple events are projected in order",
 			events: []eventstore.Event{
 				{

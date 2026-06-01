@@ -1,5 +1,7 @@
 package views
 
+import "strings"
+
 // EventListItem is the read model for the all-events list view.
 // It contains only the data needed for displaying events in a list.
 type EventListItem struct {
@@ -29,7 +31,7 @@ func (h *QueryHandler) GetAllEventsForList() ([]EventListItem, error) {
 			Sequence:        e.Sequence,
 			RecordedBy:      e.RecordedByName,
 			RecordedByEmail: e.RecordedBy,
-			Tag:             e.Tag,
+			Tag:             strings.ToLower(e.Tag),
 			Value:           e.Value,
 			RecordedAt:      e.RecordedAt,
 			Comment:         e.Comment,
