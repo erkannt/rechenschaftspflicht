@@ -10,7 +10,7 @@ import (
 func TestNewEventForm_RendersDatalist_WithExistingTags(t *testing.T) {
 	tags := []TagSuggestion{{Tag: "alpha"}, {Tag: "beta"}}
 
-	component := NewEventForm(tags)
+	component := NewEventForm(tags, FormState{})
 
 	var buf bytes.Buffer
 	err := component.Render(context.Background(), &buf)
@@ -39,7 +39,7 @@ func TestNewEventForm_RendersDatalist_WithExistingTags(t *testing.T) {
 }
 
 func TestNewEventForm_RendersWithoutDatalist_WhenNoTags(t *testing.T) {
-	component := NewEventForm(nil)
+	component := NewEventForm(nil, FormState{})
 
 	var buf bytes.Buffer
 	err := component.Render(context.Background(), &buf)
@@ -92,5 +92,102 @@ func TestNewEventFormWithSuccessBanner_RendersDatalist_WithExistingTags(t *testi
 	// Check datalist is rendered
 	if !strings.Contains(html, `list="tag-suggestions"`) {
 		t.Error("expected input to have list=\"tag-suggestions\"")
+	}
+}
+
+func TestNewEventForm_RendersErrorSummary_WhenErrorsPresent(t *testing.T) {
+	formState := FormState{
+		Tag:     "BadTag",
+		Value:   "10",
+		Comment: "test",
+		Errors: map[string]string{
+			"tag": "Tag must start with a lowercase letter and contain only lowercase letters and hyphens",
+		},
+	}
+
+	component := NewEventForm(nil, formState)
+
+	var buf bytes.Buffer
+	err := component.Render(context.Background(), &buf)
+	if err != nil {
+		t.Fatalf("unexpected error rendering: %v", err)
+	}
+
+	html := buf.String()
+
+	// Error summary heading
+	if !strings.Contains(html, "There is a problem") {
+		t.Error("expected error summary heading 'There is a problem'")
+	}
+
+	// Error message in summary
+	if !strings.Contains(html, "Tag must start with a lowercase letter") {
+		t.Error("expected error message in summary")
+	}
+
+	// Error summary links to field
+	if !strings.Contains(html, `href="#tag"`) {
+		t.Error("expected error summary link to #tag")
+	}
+}
+
+func TestNewEventForm_PreservesSubmittedValues_OnError(t *testing.T) {
+	formState := FormState{
+		Tag:     "BadTag",
+		Value:   "not-a-number",
+		Comment: "test comment",
+		Errors: map[string]string{
+			"tag":   "bad tag",
+			"value": "bad value",
+		},
+	}
+
+	component := NewEventForm(nil, formState)
+
+	var buf bytes.Buffer
+	err := component.Render(context.Background(), &buf)
+	if err != nil {
+		t.Fatalf("unexpected error rendering: %v", err)
+	}
+
+	html := buf.String()
+
+	// Tag input preserves value
+	if !strings.Contains(html, `value="BadTag"`) {
+		t.Error("expected tag input to preserve value 'BadTag'")
+	}
+
+	// Value input preserves value
+	if !strings.Contains(html, `value="not-a-number"`) {
+		t.Error("expected value input to preserve value 'not-a-number'")
+	}
+
+	// Comment textarea preserves value
+	if !strings.Contains(html, "test comment") {
+		t.Error("expected comment textarea to preserve value 'test comment'")
+	}
+
+	// Error message appears near the field
+	if !strings.Contains(html, "bad tag") {
+		t.Error("expected 'bad tag' error message")
+	}
+	if !strings.Contains(html, "bad value") {
+		t.Error("expected 'bad value' error message")
+	}
+}
+
+func TestNewEventForm_NoErrorSummary_WhenNoErrors(t *testing.T) {
+	component := NewEventForm(nil, FormState{})
+
+	var buf bytes.Buffer
+	err := component.Render(context.Background(), &buf)
+	if err != nil {
+		t.Fatalf("unexpected error rendering: %v", err)
+	}
+
+	html := buf.String()
+
+	if strings.Contains(html, "There is a problem") {
+		t.Error("expected no error summary when no errors")
 	}
 }

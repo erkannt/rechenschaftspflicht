@@ -1,11 +1,54 @@
 package views
 
-templ NewEventForm(existingTags []TagSuggestion) {
+func formGroupErrorClass(hasError bool) string {
+	if hasError {
+		return "govuk-form-group--error"
+	}
+	return ""
+}
+
+templ NewEventForm(existingTags []TagSuggestion, formState FormState) {
+	<style nonce={ templ.GetNonce(ctx) }>
+		.govuk-error-summary {
+			border: 4px solid #d4351c;
+			padding: 15px 20px;
+			margin-bottom: 30px;
+		}
+		.govuk-error-summary h2 {
+			margin-top: 0;
+			margin-bottom: 10px;
+			font-size: 1.2rem;
+		}
+		.govuk-error-summary a {
+			color: #d4351c;
+			font-weight: bold;
+		}
+		.govuk-form-group--error {
+			border-left: 4px solid #d4351c;
+			padding-left: 15px;
+			margin-bottom: 20px;
+		}
+		.govuk-error-message {
+			color: #d4351c;
+			font-weight: bold;
+			display: block;
+			margin-bottom: 5px;
+		}
+	</style>
 	<h1>Log New Event</h1>
+	@ErrorSummary(formState)
 	<form method="post">
-		<label for="tag">Tag:</label>
-		<input type="text" id="tag" name="tag" required pattern="^[a-z][a-z-]*$" if len(existingTags) > 0 { list="tag-suggestions" }/>
-		<small>Used to group events. Can only contain a-z and hyphens.</small>
+		<div class={ formGroupErrorClass(formState.ErrorFor("tag") != "") }>
+			<label for="tag">Tag:</label>
+			if formState.ErrorFor("tag") != "" {
+				<span id="tag-error" class="govuk-error-message">{ formState.ErrorFor("tag") }</span>
+			}
+			<input type="text" id="tag" name="tag" required pattern="^[a-z][a-z-]*$" value={ formState.Tag }
+				if len(existingTags) > 0 { list="tag-suggestions" }
+				if formState.ErrorFor("tag") != "" { aria-describedby="tag-error" }
+			/>
+			<small>Used to group events. Can only contain a-z and hyphens.</small>
+		</div>
 		if len(existingTags) > 0 {
 			<datalist id="tag-suggestions">
 				for _, tag := range existingTags {
@@ -13,18 +56,45 @@ templ NewEventForm(existingTags []TagSuggestion) {
 				}
 			</datalist>
 		}
-		<label for="value">Value (optional):</label>
-		<input type="number" id="value" name="value" step="any"/>
-		<small>Events with values can later be plotted.</small>
-		<label for="comment">Comment (optional):</label>
-		<textarea id="comment" name="comment"></textarea>
+		<div class={ formGroupErrorClass(formState.ErrorFor("value") != "") }>
+			<label for="value">Value (optional):</label>
+			if formState.ErrorFor("value") != "" {
+				<span id="value-error" class="govuk-error-message">{ formState.ErrorFor("value") }</span>
+			}
+			<input type="text" id="value" name="value" value={ formState.Value }
+				if formState.ErrorFor("value") != "" { aria-describedby="value-error" }
+			/>
+			<small>Events with values can later be plotted.</small>
+		</div>
+		<div class={ formGroupErrorClass(formState.ErrorFor("comment") != "") }>
+			<label for="comment">Comment (optional):</label>
+			if formState.ErrorFor("comment") != "" {
+				<span id="comment-error" class="govuk-error-message">{ formState.ErrorFor("comment") }</span>
+			}
+			<textarea id="comment" name="comment"
+				if formState.ErrorFor("comment") != "" { aria-describedby="comment-error" }
+			>{ formState.Comment }</textarea>
+		</div>
 		<button type="submit">Log Event</button>
 	</form>
 }
 
 templ NewEventFormWithSuccessBanner(existingTags []TagSuggestion) {
 	@EventRecordedBanner()
-	@NewEventForm(existingTags)
+	@NewEventForm(existingTags, FormState{})
+}
+
+templ ErrorSummary(formState FormState) {
+	if formState.HasErrors() {
+		<div class="govuk-error-summary" role="alert" aria-labelledby="error-summary-title" tabindex="-1">
+			<h2 id="error-summary-title">There is a problem</h2>
+			<ul>
+				for field, msg := range formState.Errors {
+					<li><a href={ templ.URL("#" + field) }>{ msg }</a></li>
+				}
+			</ul>
+		</div>
+	}
 }
 
 css successBanner() {

@@ -21,7 +21,7 @@ func RecordEventFormHandler(queries *views.QueryHandler, logger *slog.Logger) ht
 			return
 		}
 
-		err = views.LayoutWithNav(views.NewEventForm(tags)).Render(r.Context(), w)
+		err = views.LayoutWithNav(views.NewEventForm(tags, views.FormState{})).Render(r.Context(), w)
 		if err != nil {
 			logger.ErrorContext(r.Context(), "failed to render event form", slog.Any("error", err))
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
