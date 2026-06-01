@@ -102,6 +102,39 @@ func TestGetTagSuggestions(t *testing.T) {
 				{Tag: "zebra"},
 			},
 		},
+		{
+			name: "uppercase tags are lowercased and deduplicated",
+			events: []eventstore.Event{
+				{
+					EventType:  "EventRecorded",
+					Tag:        "Temperature",
+					Comment:    "first",
+					Value:      "20",
+					RecordedAt: "2024-01-01T00:00:00Z",
+					RecordedBy: "user@example.com",
+				},
+				{
+					EventType:  "EventRecorded",
+					Tag:        "temperature",
+					Comment:    "second",
+					Value:      "21",
+					RecordedAt: "2024-01-02T00:00:00Z",
+					RecordedBy: "user@example.com",
+				},
+				{
+					EventType:  "EventRecorded",
+					Tag:        "HUMIDITY",
+					Comment:    "third",
+					Value:      "60",
+					RecordedAt: "2024-01-03T00:00:00Z",
+					RecordedBy: "user@example.com",
+				},
+			},
+			expected: []TagSuggestion{
+				{Tag: "humidity"},
+				{Tag: "temperature"},
+			},
+		},
 	}
 
 	for _, tt := range tests {

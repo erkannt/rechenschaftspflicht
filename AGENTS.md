@@ -19,14 +19,6 @@ IMPORTANT: prefix all shell commands with `PATH=$PATH:~/mise/shims` so that depe
 
 All make commands must be run from the repository root (same directory as the Makefile), not from inside `src/`.
 
-Don't make commits. The human will commit changes.
-
-Do not run the following make targets:
-
-- dev
-- dummy-data
-- integration
-
 ### Validating changes
 
 ```bash

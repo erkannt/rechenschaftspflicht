@@ -1,5 +1,7 @@
 package views
 
+import "strings"
+
 // TagSuggestion is the read model for tag suggestions in the new event form.
 type TagSuggestion struct {
 	Tag string
@@ -18,7 +20,7 @@ func (h *QueryHandler) GetTagSuggestions() ([]TagSuggestion, error) {
 	tagSet := make(map[string]bool)
 	for _, e := range events {
 		if e.EventType == "EventRecorded" && e.Tag != "" {
-			tagSet[e.Tag] = true
+			tagSet[strings.ToLower(e.Tag)] = true
 		}
 	}
 
