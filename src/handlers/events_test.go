@@ -213,3 +213,63 @@ func TestRecordEventPostHandler_NonNumericValue_RendersFormWithError(t *testing.
 		t.Errorf("expected 0 events recorded, got %d", len(mockStore.events))
 	}
 }
+
+func TestValidateEventForm_AllValid(t *testing.T) {
+	fs := validateEventForm("my-tag", "comment", "23.5")
+	if fs.HasErrors() {
+		t.Errorf("expected no errors, got %v", fs.Errors)
+	}
+}
+
+func TestValidateEventForm_EmptyTag(t *testing.T) {
+	fs := validateEventForm("", "comment", "10")
+	if !fs.HasErrors() {
+		t.Fatal("expected errors")
+	}
+	if fs.ErrorFor("tag") == "" {
+		t.Error("expected error for tag field")
+	}
+	if fs.ErrorFor("value") != "" {
+		t.Error("expected no error for valid value")
+	}
+}
+
+func TestValidateEventForm_UppercaseTag(t *testing.T) {
+	fs := validateEventForm("BadTag", "comment", "10")
+	if !fs.HasErrors() {
+		t.Fatal("expected errors")
+	}
+	if !strings.Contains(fs.ErrorFor("tag"), "lowercase") {
+		t.Error("expected lowercase error message for uppercase tag")
+	}
+}
+
+func TestValidateEventForm_NonNumericValue(t *testing.T) {
+	fs := validateEventForm("my-tag", "comment", "not-a-number")
+	if !fs.HasErrors() {
+		t.Fatal("expected errors")
+	}
+	if !strings.Contains(fs.ErrorFor("value"), "valid number") {
+		t.Error("expected valid number error message")
+	}
+}
+
+func TestValidateEventForm_EmptyValueIsAllowed(t *testing.T) {
+	fs := validateEventForm("my-tag", "comment", "")
+	if fs.HasErrors() {
+		t.Errorf("expected no errors for empty optional value, got %v", fs.Errors)
+	}
+}
+
+func TestValidateEventForm_PreservesSubmittedValues(t *testing.T) {
+	fs := validateEventForm("my-tag", "my comment", "42.5")
+	if fs.Tag != "my-tag" {
+		t.Errorf("expected tag 'my-tag', got %q", fs.Tag)
+	}
+	if fs.Comment != "my comment" {
+		t.Errorf("expected comment 'my comment', got %q", fs.Comment)
+	}
+	if fs.Value != "42.5" {
+		t.Errorf("expected value '42.5', got %q", fs.Value)
+	}
+}

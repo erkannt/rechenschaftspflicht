@@ -42,26 +42,7 @@ func RecordEventPostHandler(cmdHandler *commands.CommandHandler, auth authentica
 		value := r.FormValue("value")
 
 		// Build form state with submitted values for re-rendering on error
-		formState := views.FormState{
-			Tag:     tag,
-			Value:   value,
-			Comment: comment,
-			Errors:  make(map[string]string),
-		}
-
-		// Validate tag
-		if tag == "" {
-			formState.Errors["tag"] = "Enter a tag"
-		} else if !commands.TagPattern.MatchString(tag) {
-			formState.Errors["tag"] = "Tag must start with a lowercase letter and contain only lowercase letters and hyphens"
-		}
-
-		// Validate value (if provided, must be numeric)
-		if value != "" {
-			if _, err := strconv.ParseFloat(value, 64); err != nil {
-				formState.Errors["value"] = "Value must be a valid number"
-			}
-		}
+		formState := validateEventForm(tag, comment, value)
 
 		// If validation fails, re-render the form with errors
 		if formState.HasErrors() {
@@ -189,4 +170,31 @@ func MarkEventIncorrectPostHandler(cmdHandler *commands.CommandHandler, auth aut
 		// Redirect back to all events page
 	http.Redirect(w, r, "/all-events", http.StatusSeeOther)
 	}
+}
+
+// validateEventForm validates the event form fields and returns a FormState
+// with any validation errors. If there are no errors, Errors will be empty.
+func validateEventForm(tag, comment, value string) views.FormState {
+	formState := views.FormState{
+		Tag:     tag,
+		Value:   value,
+		Comment: comment,
+		Errors:  make(map[string]string),
+	}
+
+	// Validate tag
+	if tag == "" {
+		formState.Errors["tag"] = "Enter a tag"
+	} else if !commands.TagPattern.MatchString(tag) {
+		formState.Errors["tag"] = "Tag must start with a lowercase letter and contain only lowercase letters and hyphens"
+	}
+
+	// Validate value (if provided, must be numeric)
+	if value != "" {
+		if _, err := strconv.ParseFloat(value, 64); err != nil {
+			formState.Errors["value"] = "Value must be a valid number"
+		}
+	}
+
+	return formState
 }
