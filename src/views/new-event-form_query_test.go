@@ -161,3 +161,29 @@ func TestGetTagSuggestions(t *testing.T) {
 		})
 	}
 }
+
+func TestFormState_HasErrors(t *testing.T) {
+	t.Parallel()
+
+	empty := FormState{}
+	if empty.HasErrors() {
+		t.Error("expected no errors for empty FormState")
+	}
+
+	withErrors := FormState{Errors: map[string]string{"tag": "bad"}}
+	if !withErrors.HasErrors() {
+		t.Error("expected HasErrors=true when errors present")
+	}
+}
+
+func TestFormState_ErrorFor(t *testing.T) {
+	t.Parallel()
+
+	fs := FormState{Errors: map[string]string{"tag": "Tag is required"}}
+	if fs.ErrorFor("tag") != "Tag is required" {
+		t.Error("expected error message for 'tag' field")
+	}
+	if fs.ErrorFor("nonexistent") != "" {
+		t.Error("expected empty string for field without error")
+	}
+}

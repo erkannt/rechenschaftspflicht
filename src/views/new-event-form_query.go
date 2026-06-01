@@ -7,6 +7,25 @@ type TagSuggestion struct {
 	Tag string
 }
 
+// FormState carries submitted form values and validation errors
+// for re-rendering the form after a validation failure.
+type FormState struct {
+	Tag     string
+	Value   string
+	Comment string
+	Errors  map[string]string // field name → error message
+}
+
+// HasErrors returns true if there are validation errors.
+func (fs FormState) HasErrors() bool {
+	return len(fs.Errors) > 0
+}
+
+// ErrorFor returns the error message for a given field, or empty string if none.
+func (fs FormState) ErrorFor(field string) string {
+	return fs.Errors[field]
+}
+
 // GetTagSuggestions retrieves all unique tags from EventRecorded events, sorted alphabetically.
 // This is a query-layer concern, so it derives tags from GetAllEvents() rather than
 // having a dedicated method in the EventStore interface.
