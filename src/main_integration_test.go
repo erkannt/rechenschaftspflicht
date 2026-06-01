@@ -182,14 +182,14 @@ func TestIntegrationHappyPath(t *testing.T) {
 		}
 		defer func() { _ = resp.Body.Close() }()
 
-		// Check if we ended up on the record-event page (successful login)
+		// Check if we ended up on the all-events page (successful login)
 		if resp.StatusCode != http.StatusOK {
 			t.Fatalf("expected 200 after redirect, got %d", resp.StatusCode)
 		}
 
 		// Verify we're on the correct page by checking the URL
-		if resp.Request.URL.Path != "/record-event" {
-			t.Fatalf("expected to be redirected to /record-event, got %s", resp.Request.URL.Path)
+		if resp.Request.URL.Path != "/all-events" {
+			t.Fatalf("expected to be redirected to /all-events, got %s", resp.Request.URL.Path)
 		}
 
 		t.Log("Login successful")
@@ -202,9 +202,9 @@ func TestIntegrationHappyPath(t *testing.T) {
 			value   string
 			comment string
 		}{
-			{"test-tag-1", "10.5", "First test event"},
-			{"test-tag-2", "20.0", "Second test event"},
-			{"test-tag-1", "15.0", "Third test event"},
+			{"test-tag-alpha", "10.5", "First test event"},
+			{"test-tag-beta", "20.0", "Second test event"},
+			{"test-tag-alpha", "15.0", "Third test event"},
 		}
 
 		for _, event := range events {
@@ -304,17 +304,17 @@ func TestIntegrationHappyPath(t *testing.T) {
 			t.Fatalf("failed to decode events: %v", err)
 		}
 
-		// Find the second event (test-tag-2)
+		// Find the second event (test-tag-beta)
 		var targetSequence int
 		for _, e := range events {
-			if e.Tag == "test-tag-2" {
+			if e.Tag == "test-tag-beta" {
 				targetSequence = e.Sequence
 				break
 			}
 		}
 
 		if targetSequence == 0 {
-			t.Fatal("could not find test-tag-2 event")
+			t.Fatal("could not find test-tag-beta event")
 		}
 
 		// Mark it as incorrect
@@ -327,8 +327,9 @@ func TestIntegrationHappyPath(t *testing.T) {
 		}
 		defer func() { _ = resp.Body.Close() }()
 
-		if resp.StatusCode != http.StatusSeeOther {
-			t.Fatalf("expected 303 redirect, got %d", resp.StatusCode)
+		// Client follows redirects, so we expect to land on /all-events with 200
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("expected 200 after redirect, got %d", resp.StatusCode)
 		}
 
 		t.Logf("Event %d marked as incorrect", targetSequence)
@@ -387,10 +388,10 @@ func TestIntegrationHappyPath(t *testing.T) {
 			t.Errorf("expected 2 events after marking one incorrect, got %d", len(events))
 		}
 
-		// Verify test-tag-2 is not in the list
+		// Verify test-tag-beta is not in the list
 		for _, e := range events {
-			if e.Tag == "test-tag-2" {
-				t.Error("test-tag-2 should be excluded from events.json")
+			if e.Tag == "test-tag-beta" {
+				t.Error("test-tag-beta should be excluded from events.json")
 			}
 		}
 
@@ -485,17 +486,17 @@ func TestIntegrationHappyPath(t *testing.T) {
 
 		content := string(body)
 
-		// Count how many "Mark Incorrect" links appear
+		// Count how many "Delete" buttons appear (the Mark Incorrect form button)
 		// Should only appear for first user's events, not second user's event
-		markIncorrectCount := strings.Count(content, "Mark Incorrect")
+		deleteCount := strings.Count(content, ">Delete<")
 
 		// We expect 2 (the two events from step 3 that weren't marked incorrect)
-		// The second user's event should NOT have a Mark Incorrect link for first user
-		if markIncorrectCount != 2 {
-			t.Errorf("expected 2 'Mark Incorrect' links (only for own events), got %d", markIncorrectCount)
+		// The second user's event should NOT have a Delete button for first user
+		if deleteCount != 2 {
+			t.Errorf("expected 2 'Delete' buttons (only for own events), got %d", deleteCount)
 			t.Logf("Page content snippet:\n%s", content)
 		} else {
-			t.Logf("Correct: Found %d 'Mark Incorrect' links (only for own events)", markIncorrectCount)
+			t.Logf("Correct: Found %d 'Delete' buttons (only for own events)", deleteCount)
 		}
 	})
 

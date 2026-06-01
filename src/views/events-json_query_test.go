@@ -49,6 +49,7 @@ func TestGetEventsForJson(t *testing.T) {
 			},
 			expected: []EventJson{
 				{
+					Sequence:   1,
 					Tag:        "temperature",
 					Comment:    "morning reading",
 					Value:      "23.5",
@@ -87,6 +88,7 @@ func TestGetEventsForJson(t *testing.T) {
 			},
 			expected: []EventJson{
 				{
+					Sequence:   1,
 					Tag:        "temperature",
 					Value:      "20",
 					ValueNum:   20.0,
@@ -128,6 +130,7 @@ func TestGetEventsForJson(t *testing.T) {
 			},
 			expected: []EventJson{
 				{
+					Sequence:   1,
 					Tag:        "temperature",
 					Comment:    "valid",
 					Value:      "20.0",
@@ -136,6 +139,7 @@ func TestGetEventsForJson(t *testing.T) {
 					RecordedBy: "user1@example.com",
 				},
 				{
+					Sequence:   3,
 					Tag:        "pressure",
 					Comment:    "valid",
 					Value:      "1013.25",

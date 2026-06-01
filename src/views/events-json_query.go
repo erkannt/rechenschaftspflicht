@@ -8,6 +8,7 @@ import (
 // EventJson is the read model for the JSON API endpoint.
 // It includes both the raw value string and the parsed numeric value.
 type EventJson struct {
+	Sequence   int     `json:"sequence"`
 	Tag        string  `json:"tag"`
 	Comment    string  `json:"comment"`
 	Value      string  `json:"value"`
@@ -41,6 +42,7 @@ func (h *QueryHandler) GetEventsForJson() ([]EventJson, error) {
 		}
 
 		result = append(result, EventJson{
+			Sequence:   e.Sequence,
 			Tag:        strings.ToLower(e.Tag),
 			Comment:    e.Comment,
 			Value:      e.Value,
