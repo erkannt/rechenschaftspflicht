@@ -10,8 +10,8 @@ import (
 	"github.com/erkannt/rechenschaftspflicht/services/eventstore"
 )
 
-// Tag pattern: lowercase letters and hyphens, must start with a letter
-var tagPattern = regexp.MustCompile(`^[a-z][a-z-]*$`)
+// TagPattern validates tags: lowercase letters and hyphens, must start with a letter
+var TagPattern = regexp.MustCompile(`^[a-z][a-z-]*$`)
 
 // RecordEvent records a new event with the given data.
 // It validates the tag format and value (if provided) before recording.
@@ -26,7 +26,7 @@ func (h *CommandHandler) RecordEvent(
 	if tag == "" {
 		return fmt.Errorf("tag is required")
 	}
-	if !tagPattern.MatchString(tag) {
+	if !TagPattern.MatchString(tag) {
 		return fmt.Errorf("tag must start with a lowercase letter and contain only lowercase letters and hyphens")
 	}
 

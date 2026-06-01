@@ -40,6 +40,45 @@ func RecordEventPostHandler(cmdHandler *commands.CommandHandler, auth authentica
 		tag := r.FormValue("tag")
 		comment := r.FormValue("comment")
 		value := r.FormValue("value")
+
+		// Build form state with submitted values for re-rendering on error
+		formState := views.FormState{
+			Tag:     tag,
+			Value:   value,
+			Comment: comment,
+			Errors:  make(map[string]string),
+		}
+
+		// Validate tag
+		if tag == "" {
+			formState.Errors["tag"] = "Enter a tag"
+		} else if !commands.TagPattern.MatchString(tag) {
+			formState.Errors["tag"] = "Tag must start with a lowercase letter and contain only lowercase letters and hyphens"
+		}
+
+		// Validate value (if provided, must be numeric)
+		if value != "" {
+			if _, err := strconv.ParseFloat(value, 64); err != nil {
+				formState.Errors["value"] = "Value must be a valid number"
+			}
+		}
+
+		// If validation fails, re-render the form with errors
+		if formState.HasErrors() {
+			tags, err := queries.GetTagSuggestions()
+			if err != nil {
+				logger.ErrorContext(r.Context(), "failed to retrieve tags for error form", slog.Any("error", err))
+				tags = nil
+			}
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			err = views.LayoutWithNav(views.NewEventForm(tags, formState)).Render(r.Context(), w)
+			if err != nil {
+				logger.ErrorContext(r.Context(), "failed to render error form", slog.Any("error", err))
+				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			}
+			return
+		}
+
 		recordedBy, _ := auth.GetLoggedInUserEmail(r)
 
 		if err := cmdHandler.RecordEvent(r.Context(), tag, comment, value, recordedBy); err != nil {
