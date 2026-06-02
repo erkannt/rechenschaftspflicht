@@ -28,6 +28,7 @@ func TestNewCommandHandler(t *testing.T) {
 
 	if ch == nil {
 		t.Fatal("expected CommandHandler to be created, got nil")
+		return
 	}
 
 	if ch.eventStore != mockStore {
