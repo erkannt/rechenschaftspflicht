@@ -27,13 +27,13 @@ func (h *CommandHandler) RecordEvent(
 		return fmt.Errorf("tag is required")
 	}
 	if !TagPattern.MatchString(tag) {
-		return fmt.Errorf("tag must start with a lowercase letter and contain only lowercase letters and hyphens")
+		return fmt.Errorf("only lowercase letters and hyphens are allowed in tags")
 	}
 
 	// Validate value (if provided, must be numeric)
 	if value != "" {
 		if _, err := strconv.ParseFloat(value, 64); err != nil {
-			return fmt.Errorf("value must be a valid number: %w", err)
+			return fmt.Errorf("value must be a number: %w", err)
 		}
 	}
 
