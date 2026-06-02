@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"testing"
 
 	"github.com/erkannt/rechenschaftspflicht/services/eventstore"
@@ -13,7 +14,7 @@ func TestMarkEventAsIncorrect_ValidEvent(t *testing.T) {
 
 	mockStore := &mockEventStore{
 		recorded: []eventstore.Event{
-			{Sequence: 1, EventType: "EventRecorded", Tag: "temperature"},
+			{Sequence: 1, EventType: "EventRecorded", Tag: "temperature", RecordedBy: "user@example.com"},
 		},
 	}
 	ch := NewCommandHandler(mockStore, newTestLogger())
@@ -50,7 +51,7 @@ func TestMarkEventAsIncorrect_NonExistentEvent(t *testing.T) {
 
 	mockStore := &mockEventStore{
 		recorded: []eventstore.Event{
-			{Sequence: 1, EventType: "EventRecorded", Tag: "temperature"},
+			{Sequence: 1, EventType: "EventRecorded", Tag: "temperature", RecordedBy: "user@example.com"},
 		},
 	}
 	ch := NewCommandHandler(mockStore, newTestLogger())
@@ -66,7 +67,7 @@ func TestMarkEventAsIncorrect_EmptyMarkedBy(t *testing.T) {
 
 	mockStore := &mockEventStore{
 		recorded: []eventstore.Event{
-			{Sequence: 1, EventType: "EventRecorded", Tag: "temperature"},
+			{Sequence: 1, EventType: "EventRecorded", Tag: "temperature", RecordedBy: "user@example.com"},
 		},
 	}
 	ch := NewCommandHandler(mockStore, newTestLogger())
@@ -82,18 +83,18 @@ func TestMarkEventAsIncorrect_Idempotent(t *testing.T) {
 
 	mockStore := &mockEventStore{
 		recorded: []eventstore.Event{
-			{Sequence: 1, EventType: "EventRecorded", Tag: "temperature"},
+			{Sequence: 1, EventType: "EventRecorded", Tag: "temperature", RecordedBy: "user@example.com"},
 		},
 	}
 	ch := NewCommandHandler(mockStore, newTestLogger())
 
-	// Mark twice - should be allowed (creates two mark events)
-	err := ch.MarkEventAsIncorrect(context.Background(), 1, "user1@example.com")
+	// Same owner marks their own event twice — should be allowed (creates two mark events)
+	err := ch.MarkEventAsIncorrect(context.Background(), 1, "user@example.com")
 	if err != nil {
 		t.Fatalf("first mark failed: %v", err)
 	}
 
-	err = ch.MarkEventAsIncorrect(context.Background(), 1, "user2@example.com")
+	err = ch.MarkEventAsIncorrect(context.Background(), 1, "user@example.com")
 	if err != nil {
 		t.Fatalf("second mark failed: %v", err)
 	}
@@ -109,7 +110,7 @@ func TestMarkEventAsIncorrect_RecordsTimestamp(t *testing.T) {
 
 	mockStore := &mockEventStore{
 		recorded: []eventstore.Event{
-			{Sequence: 1, EventType: "EventRecorded", Tag: "temperature"},
+			{Sequence: 1, EventType: "EventRecorded", Tag: "temperature", RecordedBy: "user@example.com"},
 		},
 	}
 	ch := NewCommandHandler(mockStore, newTestLogger())
@@ -122,5 +123,29 @@ func TestMarkEventAsIncorrect_RecordsTimestamp(t *testing.T) {
 	markEvent := mockStore.recorded[1]
 	if markEvent.RecordedAt == "" {
 		t.Error("expected RecordedAt to be set")
+	}
+}
+
+func TestMarkEventAsIncorrect_NotOwnEvent(t *testing.T) {
+	t.Parallel()
+
+	mockStore := &mockEventStore{
+		recorded: []eventstore.Event{
+			{Sequence: 1, EventType: "EventRecorded", Tag: "temperature", RecordedBy: "owner@example.com"},
+		},
+	}
+	ch := NewCommandHandler(mockStore, newTestLogger())
+
+	err := ch.MarkEventAsIncorrect(context.Background(), 1, "attacker@example.com")
+	if err == nil {
+		t.Fatal("expected error when marking another user's event, got nil")
+	}
+	if !errors.Is(err, ErrNotOwner) {
+		t.Errorf("expected ErrNotOwner, got %v", err)
+	}
+
+	// No new events should have been recorded
+	if len(mockStore.recorded) != 1 {
+		t.Errorf("expected 1 event (original only), got %d", len(mockStore.recorded))
 	}
 }

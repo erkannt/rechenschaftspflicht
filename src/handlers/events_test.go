@@ -261,6 +261,35 @@ func TestValidateEventForm_EmptyValueIsAllowed(t *testing.T) {
 	}
 }
 
+func TestMarkEventIncorrectPostHandler_NotOwnEvent_ReturnsForbidden(t *testing.T) {
+	mockStore := &mockEventStore{
+		events: []eventstore.Event{
+			{Sequence: 1, EventType: "EventRecorded", Tag: "temperature", RecordedBy: "owner@example.com"},
+		},
+	}
+	cmdHandler := commands.NewCommandHandler(mockStore, newTestLogger())
+	mockAuth := &mockAuth{email: "attacker@example.com"}
+
+	handler := MarkEventIncorrectPostHandler(cmdHandler, mockAuth, newTestLogger())
+
+	form := url.Values{"sequence": {"1"}}
+	req := httptest.NewRequest("POST", "/mark-event-incorrect", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	w := httptest.NewRecorder()
+
+	handler(w, req, nil)
+
+	// RED: currently returns 500, should return 403
+	if w.Code != http.StatusForbidden {
+		t.Errorf("expected status 403 Forbidden, got %d", w.Code)
+	}
+
+	// No mark event should have been recorded
+	if len(mockStore.events) != 1 {
+		t.Errorf("expected 1 event (original only), got %d", len(mockStore.events))
+	}
+}
+
 func TestValidateEventForm_PreservesSubmittedValues(t *testing.T) {
 	fs := validateEventForm("my-tag", "my comment", "42.5")
 	if fs.Tag != "my-tag" {

@@ -3,11 +3,15 @@ package commands
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/erkannt/rechenschaftspflicht/services/eventstore"
 )
+
+// ErrNotOwner is returned when a user attempts to mark an event they do not own.
+var ErrNotOwner = errors.New("event does not belong to user")
 
 // MarkEventAsIncorrect marks an existing event as incorrect by raising
 // an EventMarkedAsIncorrect event.
@@ -30,16 +34,20 @@ func (h *CommandHandler) MarkEventAsIncorrect(
 		return fmt.Errorf("failed to retrieve events: %w", err)
 	}
 
-	eventExists := false
+	var targetEvent *eventstore.Event
 	for _, e := range events {
 		if e.Sequence == originalSequence {
-			eventExists = true
+			targetEvent = &e
 			break
 		}
 	}
 
-	if !eventExists {
+	if targetEvent == nil {
 		return fmt.Errorf("event with sequence %d does not exist", originalSequence)
+	}
+
+	if targetEvent.RecordedBy != markedBy {
+		return ErrNotOwner
 	}
 
 	// Create the EventMarkedAsIncorrect event

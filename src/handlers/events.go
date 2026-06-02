@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -162,6 +163,14 @@ func MarkEventIncorrectPostHandler(cmdHandler *commands.CommandHandler, auth aut
 		}
 
 		if err := cmdHandler.MarkEventAsIncorrect(r.Context(), sequence, markedBy); err != nil {
+			if errors.Is(err, commands.ErrNotOwner) {
+				w.WriteHeader(http.StatusForbidden)
+				err = views.LayoutWithNav(views.Forbidden()).Render(r.Context(), w)
+				if err != nil {
+					logger.ErrorContext(r.Context(), "failed to render forbidden page", slog.Any("error", err))
+				}
+				return
+			}
 			logger.ErrorContext(r.Context(), "failed to mark event as incorrect", slog.Any("error", err))
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
