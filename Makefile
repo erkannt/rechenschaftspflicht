@@ -47,6 +47,14 @@ fix:
 test:
 	cd src && go test ./...
 
+.PHONY: clean
+clean:
+	go clean -cache -testcache
+	golangci-lint cache clean
+
+.PHONY: check-fresh
+check-fresh: clean check
+
 .PHONY: integration
 integration:
 	cd src && go test -tags=integration -run TestIntegrationHappyPath -v .

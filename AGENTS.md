@@ -22,11 +22,18 @@ All make commands must be run from the repository root (same directory as the Ma
 ### Validating changes
 
 ```bash
-make check                 # Run go build, go vet, and golangci-lint
+make check                 # Run go test, go build, go vet, and golangci-lint (cached, fast)
+make check-fresh           # Same as check but clears all caches first (slower, thorough)
 make fix                   # Auto-format and fix code (go fmt, go fix)
 make test                  # Run unit tests
+make clean                 # Clear go and golangci-lint caches
 make generate              # generate go code from templ files to manually check if templ file works as expected
 ```
+
+**When to use which:**
+
+- Use `make check` during sequences of small, iterative changes — cached results keep the feedback loop fast.
+- Use `make check-fresh` after completing a larger piece of work or sequence of small steps
 
 ## Code Style Guidelines
 
