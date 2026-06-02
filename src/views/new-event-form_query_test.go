@@ -103,7 +103,7 @@ func TestGetTagSuggestions(t *testing.T) {
 			},
 		},
 		{
-			name: "uppercase tags are lowercased and deduplicated",
+			name: "uppercase tags are lowercased",
 			events: []eventstore.Event{
 				{
 					EventType:  "EventRecorded",
